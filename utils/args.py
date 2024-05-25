@@ -42,7 +42,6 @@ def get_args():
     parser.add_argument('--trans1', type=str, default='rotate') # the first data augmentation
     parser.add_argument('--trans2', type=str, default='affine') # the second data augmentation
 
-    #ABL specific
     parser.add_argument('--unlearn_type', type=str, default=None, help='dbr, abl') # unlearn method
     parser.add_argument('--unlearning_epochs', type=int, default=20, help='number of unlearning epochs to run')
     parser.add_argument('--interval', type=int, default=5, help='frequency of save model')

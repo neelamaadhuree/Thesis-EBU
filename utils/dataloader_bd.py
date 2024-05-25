@@ -80,6 +80,11 @@ def get_dataloader_train(opt):
         dataset = torchvision.datasets.CIFAR100(opt.data_root, train, download=True)
     else:
         raise Exception("Invalid dataset")
+    
+    # if opt.unlearn_type=='rnr':
+    #     poison_rate=0
+    # else:
+    #     poison_rate=opt.poison_rate
 
     transform1, transform2, transform3 = get_transform(opt, train)
     train_data_bad = DatasetBD(opt, full_dataset=dataset, inject_portion=opt.poison_rate, transform=TransformThree(transform1, transform2, transform3),
@@ -101,7 +106,7 @@ def get_dataloader_test(opt):
     else:
         raise Exception("Invalid dataset")
 
-    if opt.unlearn_type=='dbr':
+    if opt.unlearn_type=='dbr' or opt.unlearn_type=='rnr':
         transform = get_transform(opt, train)
     if opt.unlearn_type=='abl':
         transform = transforms.Compose([transforms.ToTensor()

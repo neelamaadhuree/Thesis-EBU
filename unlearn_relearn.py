@@ -1,5 +1,8 @@
 # python unlearn_relearn.py --dataset cifar10 --model resnet18 --trigger_type signalTrigger --epochs 20 --clean_ratio 0.80 --poison_ratio 0.20 --checkpoint_load ./saved/backdoored_model/poison_rate_0.1/withTrans/cifar10/resnet18/signalTrigger/49.tar --checkpoint_save ./saved/backdoored_model/poison_rate_0.1/withTrans/cifar10/resnet18/signalTrigger/49_unlearn_purify.py --log ./saved/backdoored_model/poison_rate_0.1/withTrans/cifar10/resnet18/signalTrigger/unlearn_purify.csv --unlearn_type dbr
-# python unlearn_relearn.py --dataset cifar10 --model resnet18 --trigger_type signalTrigger --epochs 20 --clean_ratio 0.80 --poison_ratio 0.20 --checkpoint_load ./saved/backdoored_model/poison_rate_0.1/withTrans/cifar10/resnet18/signalTrigger/49.tar --unlearn_type abl
+# python unlearn_relearn.py --dataset cifar10 --model resnet18 --trigger_type signalTrigger --epochs 20 --clean_ratio 0.80 --poison_ratio 0.20 --checkpoint_load ./saved/backdoored_model/poison_rate_0.1/withTrans/cifar10/resnet18/signalTrigger/49.tar --unlearn_type abl 
+# python unlearn_relearn.py --dataset cifar10 --model resnet18 --trigger_type signalTrigger --epochs 20  --unlearn_type rnr --clean_ratio 0.80 --poison_ratio 0.20 --checkpoint_load ./saved/backdoored_model/poison_rate_0.1/withTrans/cifar10/resnet18/signalTrigger/49.tar
+
+
 import sys
 import os
 from tqdm import tqdm
@@ -269,11 +272,65 @@ def train_step_finetuing(opt, train_loader, model_ascent, optimizer, criterion, 
                   'loss:{losses.val:.4f}({losses.avg:.4f})  '
                   'prec@1:{top1.val:.2f}({top1.avg:.2f})  '
                   'prec@5:{top5.val:.2f}({top5.avg:.2f})'.format(epoch, idx, len(train_loader), losses=losses, top1=top1, top5=top5))
+            
+def train_epoch_rnr(arg, trainloader, model, optimizer, scheduler, criterion, epoch):
+    model.train()
+
+    total_clean = 0
+    total_clean_correct, total_robust_correct = 0, 0
+    train_loss = 0
+
+    for i, (inputs, labels, gt_labels, isCleans) in enumerate(trainloader):
+        # Normalize the input images
+        inputs = normalization(arg, inputs[1])  # Assuming 'inputs' is already correctly shaped
+
+        # Move data to the appropriate device (CPU or GPU)
+        inputs, labels, gt_labels = inputs.to(arg.device), labels.to(arg.device), gt_labels.to(arg.device)
+
+        # Find indices of clean samples
+        clean_idx = torch.where(isCleans == True)[0]
+
+        # Filter inputs and labels to include only clean data
+        clean_inputs = inputs[clean_idx]
+        clean_labels = labels[clean_idx]
+        clean_gt_labels = gt_labels[clean_idx]
+
+        # Perform forward pass with only clean data
+        if len(clean_inputs) > 0:  # Check to ensure there are clean samples
+            outputs = model(clean_inputs)
+            loss = criterion(outputs, clean_labels)
+
+            # Backpropagation
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            # Accumulate statistics
+            train_loss += loss.item()
+            total_clean_correct += torch.sum(torch.argmax(outputs, dim=1) == clean_labels)
+            total_robust_correct += torch.sum(torch.argmax(outputs, dim=1) == clean_gt_labels)
+            total_clean += clean_inputs.shape[0]
+
+        # Display progress
+        if total_clean > 0:  # Avoid division by zero
+            avg_acc_clean = total_clean_correct * 100.0 / total_clean
+            avg_acc_robust = total_robust_correct * 100.0 / total_clean
+            progress_bar(i, len(trainloader),
+                         'Epoch: %d | Loss: %.3f | Train ACC: %.3f%% (%d/%d) | Train R-ACC: %.3f%% (%d/%d)' % (
+                         epoch, train_loss / (i + 1), avg_acc_clean, total_clean_correct, total_clean,
+                         avg_acc_robust, total_robust_correct, total_clean))
+
+    # Step the learning rate scheduler
+    scheduler.step()
+
+    return train_loss / (i + 1), avg_acc_clean, avg_acc_robust
+
 
 
 def main():
     global arg
     arg = args.get_args()
+    trainloader = get_dataloader_train(arg)
 
     # Dataset
     isolate_clean_data,isolate_poison_data,isolate_other_data = load_dataset(arg)
@@ -315,8 +372,8 @@ def main():
 
     # Prepare model, optimizer, scheduler
     model = get_network(arg)
-    model = torch.nn.DataParallel(model).cuda()
-    # model = torch.nn.DataParallel(model)
+    # model = torch.nn.DataParallel(model).cuda()
+    model = torch.nn.DataParallel(model)
     if arg.unlearn_type=='abl':
         optimizer = torch.optim.SGD(model.parameters(), lr=arg.lr, momentum=0.9, weight_decay=1e-4)
     elif arg.unlearn_type=='dbr':
@@ -401,6 +458,51 @@ def main():
                         'bad_acc': acc_bad[0],
                         'optimizer': optimizer.state_dict(),
                     }, epoch + 1, is_best, arg)
+
+    elif arg.unlearn_type=='rnr':
+
+        # Prepare model, optimizer, scheduler
+        model = get_network(arg)
+        # model = torch.nn.DataParallel(model).cuda()
+        model = torch.nn.DataParallel(model)
+
+        optimizer = torch.optim.SGD(model.parameters(), lr=arg.lr, momentum=0.9, weight_decay=5e-4)
+        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=arg.schedule, gamma=arg.gamma)
+        
+        print("Training from scratch...")
+        start_epoch = 0
+
+        # Training and Testing
+        best_acc = 0
+        criterion = nn.CrossEntropyLoss()
+
+        # Write
+        save_folder_path = os.path.join('./saved/backdoored_model', 'poison_rate_0', 'withTrans', arg.dataset, arg.model, arg.trigger_type)
+        if not os.path.exists(save_folder_path):
+            os.makedirs(save_folder_path)
+        arg.log = os.path.join(save_folder_path, 'withTrans.csv')
+        f_name = arg.log
+        csvFile = open(f_name, 'a', newline='')
+        writer = csv.writer(csvFile)
+        writer.writerow(
+            ['Epoch', 'Train_Loss', 'Train_ACC',  'Train_R-ACC', 'Test_Loss_cl', 'Test_ACC', 'Test_Loss_bd',
+            'Test_ASR', 'Test_R-ACC'])
+        for epoch in tqdm(range(start_epoch, arg.epochs)):
+            train_loss, train_acc, train_racc = train_epoch_rnr(arg, trainloader, model, optimizer, scheduler,
+                                                                    criterion, epoch)
+            test_loss_cl, test_acc_cl, _ = test_epoch(arg, testloader_clean, model, criterion, epoch, 'clean')
+            test_loss_bd, test_acc_bd, test_acc_robust = test_epoch(arg, testloader_bd, model, criterion, epoch, 'bd')
+
+            # Save in every epoch
+            save_file_path = os.path.join(save_folder_path, str(epoch) + '.tar')
+            save_checkpoint(save_file_path, epoch, model, optimizer, scheduler)
+
+            writer.writerow(
+                [epoch, train_loss, train_acc.item(), train_racc.item(), test_loss_cl, test_acc_cl.item(),
+                test_loss_bd, test_acc_bd.item(), test_acc_robust.item()])
+        csvFile.close()
+
+
 
 if __name__ == '__main__':
     main()
