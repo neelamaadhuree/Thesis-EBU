@@ -7,6 +7,7 @@ import numpy as np
 from PIL import Image
 from tqdm import tqdm
 import time
+import pdb
 import sys
 from matplotlib import image as mlt
 import cv2
@@ -106,7 +107,7 @@ def get_dataloader_test(opt):
     else:
         raise Exception("Invalid dataset")
 
-    if opt.unlearn_type=='dbr' or opt.unlearn_type=='rnr' or opt.unlearn_type=='cfu':
+    if opt.unlearn_type=='dbr' or opt.unlearn_type=='rnr' or opt.unlearn_type=='cfu' or opt.unlearn_type=='ssd':
         transform = get_transform(opt, train)
     if opt.unlearn_type=='abl':
         transform = transforms.Compose([transforms.ToTensor()
