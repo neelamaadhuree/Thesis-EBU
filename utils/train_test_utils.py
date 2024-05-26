@@ -397,7 +397,7 @@ def ssd_tuning(model,
     }
 
     # load the trained model
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=1e-4)
     pdr = ssd.ParameterPerturber(model, optimizer, device, parameters)
 
     model = model.eval()
