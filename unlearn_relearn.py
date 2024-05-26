@@ -1,7 +1,7 @@
 # python unlearn_relearn.py --dataset cifar10 --model resnet18 --trigger_type signalTrigger --epochs 20 --clean_ratio 0.80 --poison_ratio 0.20 --checkpoint_load ./saved/backdoored_model/poison_rate_0.1/withTrans/cifar10/resnet18/signalTrigger/49.tar --checkpoint_save ./saved/backdoored_model/poison_rate_0.1/withTrans/cifar10/resnet18/signalTrigger/49_unlearn_purify.py --log ./saved/backdoored_model/poison_rate_0.1/withTrans/cifar10/resnet18/signalTrigger/unlearn_purify.csv --unlearn_type dbr
 # python unlearn_relearn.py --dataset cifar10 --model resnet18 --trigger_type signalTrigger --epochs 20 --clean_ratio 0.80 --poison_ratio 0.20 --checkpoint_load ./saved/backdoored_model/poison_rate_0.1/withTrans/cifar10/resnet18/signalTrigger/49.tar --unlearn_type abl 
 # python unlearn_relearn.py --dataset cifar10 --model resnet18 --trigger_type signalTrigger --epochs 20  --unlearn_type rnr --clean_ratio 0.80 --poison_ratio 0.20 --checkpoint_load ./saved/backdoored_model/poison_rate_0.1/withTrans/cifar10/resnet18/signalTrigger/49.tar
-
+# python unlearn_relearn.py --dataset cifar10 --model resnet18 --trigger_type signalTrigger --epochs 20  --unlearn_type cfu --clean_ratio 0.80 --poison_ratio 0.20 --checkpoint_load ./saved/backdoored_model/poison_rate_0.1/withTrans/cifar10/resnet18/signalTrigger/199.tar
 
 import sys
 import os
@@ -326,6 +326,64 @@ def train_epoch_rnr(arg, trainloader, model, optimizer, scheduler, criterion, ep
     return train_loss / (i + 1), avg_acc_clean, avg_acc_robust
 
 
+def trainable_params_(m):
+    return [p for p in m.parameters() if p.requires_grad]
+
+
+def train_cf(opt, model, epochs, train_loader):
+
+    optimizer = torch.optim.SGD(trainable_params_(model), lr=arg.lr, momentum=0.9, weight_decay=1e-4)
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=arg.schedule, gamma=arg.gamma)
+    criterion = nn.CrossEntropyLoss()
+    model.train()
+
+    
+    for epoch in range(epochs):
+        for param_group in optimizer.param_groups:
+            print(f"Epoch {epoch}, Learning Rate: {param_group['lr']}")
+        for data, targets, flg in train_loader:
+            if opt.device=='cuda':
+                data = data.cuda()
+                targets = targets.cuda()
+            output = model(data)
+
+            loss = criterion(output, targets)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            
+        scheduler.step()
+        print(f"Epoch {epoch+1}, Loss: {loss.item()}")
+
+def getRetrainLayers(m, name, ret):
+    if isinstance(m, nn.Conv2d) or isinstance(m, nn.BatchNorm2d) or isinstance(m, nn.Linear):
+        ret.append((m, name))
+        #print(name)
+    for child_name, child in m.named_children():
+        getRetrainLayers(child, f'{name}.{child_name}', ret)
+    return ret
+
+
+def resetFinalResnet(model, num_retrain):
+    for param in model.parameters():
+        param.requires_grad = False
+    done = 0
+    ret = getRetrainLayers(model, 'M', [])
+    ret.reverse()
+    for idx in range(len(ret)):
+        if isinstance(ret[idx][0], nn.Conv2d) or isinstance(ret[idx][0], nn.Linear):
+            done += 1
+        for param in ret[idx][0].parameters():
+            param.requires_grad = True
+        if done >= num_retrain:
+            break
+
+
+    for name, param in model.named_parameters():
+        if param.requires_grad:
+            print(f"Trainable layer: {name}, shape: {param.shape}")
+
+    return model
 
 def main():
     global arg
@@ -502,7 +560,26 @@ def main():
                 test_loss_bd, test_acc_bd.item(), test_acc_robust.item()])
         csvFile.close()
 
+    elif arg.unlearn_type=='cfu':
+        k_layer = 10            
+        
+        f_name = arg.log
+        csvFile = open(f_name, 'a', newline='')
+        writer = csv.writer(csvFile)
+        writer.writerow(['Epoch', 'Test_ACC', 'Test_ASR'])
 
+        # Test the orginal performance of the model
+        # test_loss_cl, test_acc_cl, _ = test_epoch(arg, testloader_clean, model, criterion, 0, 'clean')
+        # test_loss_bd, test_acc_bd, test_acc_robust = test_epoch(arg, testloader_bd, model, criterion, 0, 'bd')
+        # writer.writerow([-1, test_acc_cl.item(), test_acc_bd.item()])
 
+        model = resetFinalResnet(model, k_layer)
+        # do args to device if we have cudd
+        train_cf(arg, model, arg.epochs, isolate_clean_data_loader)
+        test_loss_cl, test_acc_cl, _ = test_epoch(arg, testloader_clean, model, criterion, 0, 'clean')
+        test_loss_bd, test_acc_bd, test_acc_robust = test_epoch(arg, testloader_bd, model, criterion, 0, 'bd')
+        cnt=-1
+        writer.writerow([cnt+1, test_acc_cl.item(), test_acc_bd.item()])
+    csvFile.close()
 if __name__ == '__main__':
     main()

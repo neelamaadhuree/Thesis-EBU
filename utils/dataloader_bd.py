@@ -106,7 +106,7 @@ def get_dataloader_test(opt):
     else:
         raise Exception("Invalid dataset")
 
-    if opt.unlearn_type=='dbr' or opt.unlearn_type=='rnr':
+    if opt.unlearn_type=='dbr' or opt.unlearn_type=='rnr' or opt.unlearn_type=='cfu':
         transform = get_transform(opt, train)
     if opt.unlearn_type=='abl':
         transform = transforms.Compose([transforms.ToTensor()
