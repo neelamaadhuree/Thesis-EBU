@@ -220,9 +220,10 @@ def load_dataset(arg):
                 flag = 2
                 poison_samples.append((img_np, target_np, flag))
     noOfPoison=int(len(poison_samples)*arg.poison_ratio)
+    cleanDataReqLen = len(poison_samples) - noOfPoison
     print('noOfPoison - ',noOfPoison,'totalNoPoisonData - ',len(poison_samples))
-    
-    return clean_samples, poison_samples[:noOfPoison],clean_samples+ poison_samples[noOfPoison:], clean_samples+ poison_samples
+
+    return clean_samples[cleanDataReqLen:]+poison_samples[noOfPoison:], poison_samples[:noOfPoison]+ clean_samples[:cleanDataReqLen],clean_samples+ poison_samples[noOfPoison:], clean_samples+ poison_samples
 
 
 def train_step_finetuing(opt, train_loader, model_ascent, optimizer, criterion, epoch):
