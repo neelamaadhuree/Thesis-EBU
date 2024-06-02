@@ -50,8 +50,11 @@ def load_dataset(arg):
                 flag = 2
                 poison_samples.append((img_np, target_np, flag))
     noOfPoison=int(len(poison_samples)*arg.poison_ratio)
+    cleanDataReqLen = len(poison_samples) - noOfPoison
     print('noOfPoison - ',noOfPoison,'totalNoPoisonData - ',len(poison_samples))
-    
+
+    #return clean_samples[cleanDataReqLen:]+poison_samples[noOfPoison:], poison_samples[:noOfPoison]+ clean_samples[:cleanDataReqLen],clean_samples+ poison_samples[noOfPoison:], clean_samples+ poison_samples
+
     return clean_samples, poison_samples[:noOfPoison],clean_samples+ poison_samples[noOfPoison:], clean_samples+ poison_samples
 
 
@@ -214,11 +217,11 @@ def main():
     criterion = nn.CrossEntropyLoss()
 
     if arg.unlearn_type=='dbr':
-        dbr_unlearning = DBRUnlearning(model, criterion, args)
+        dbr_unlearning = DBRUnlearning(model, criterion, arg)
         dbr_unlearning.unlearn(testloader_clean, testloader_bd, isolate_poison_data_loader, isolate_clean_data_loader)
     elif arg.unlearn_type=='abl':
-        abl_unlearning = ABLUnlearning(model, criterion, isolate_other_data, args, args.device)
-        abl_unlearning.unlearn()
+        abl_unlearning = ABLUnlearning(model, criterion, isolate_other_data, arg, arg.device)
+        abl_unlearning.unlearn(arg, testloader_clean, testloader_bd)
     elif arg.unlearn_type=='rnr':
         rnr_learning = RNR(model, criterion, arg)
         rnr_learning.unlearn(trainloader, testloader_clean, testloader_bd)

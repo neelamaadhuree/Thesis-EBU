@@ -1,9 +1,9 @@
 
 import torch
-from utils.utils import d, progress_bar, normalization
+from utils.utils import progress_bar, normalization
 
 
-def test_epoch(self, arg, testloader, model, criterion, epoch, word):
+def test_epoch( arg, testloader, model, criterion, epoch, word):
     model.eval()
     total_clean = 0
     total_clean_correct, total_robust_correct = 0, 0

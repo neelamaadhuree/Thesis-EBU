@@ -18,7 +18,7 @@ class RNR:
 
 
 
-    def train_epoch_rnr(self, trainloader, epoch):
+    def train_epoch_rnr(self, trainloader,criterion, epoch):
         self.model.train()
 
         total_clean = 0
@@ -93,9 +93,9 @@ class RNR:
             ['Epoch', 'Train_Loss', 'Train_ACC',  'Train_R-ACC', 'Test_Loss_cl', 'Test_ACC', 'Test_Loss_bd',
             'Test_ASR', 'Test_R-ACC'])
         for epoch in tqdm(range(start_epoch, arg.epochs)):
-            train_loss, train_acc, train_racc = self.train_epoch_rnr(trainloader, criterion, epoch)
-            test_loss_cl, test_acc_cl, _ = test_epoch(arg, testloader_clean, self.model, criterion, epoch, 'clean')
-            test_loss_bd, test_acc_bd, test_acc_robust = test_epoch(arg, testloader_bd, self.model, criterion, epoch, 'bd')
+            train_loss, train_acc, train_racc = self.train_epoch_rnr(trainloader, self.criterion, epoch)
+            test_loss_cl, test_acc_cl, _ = test_epoch(arg, testloader_clean, self.model, self.criterion, epoch, 'clean')
+            test_loss_bd, test_acc_bd, test_acc_robust = test_epoch(arg, testloader_bd, self.model, self.criterion, epoch, 'bd')
 
             # Save in every epoch
             save_file_path = os.path.join(save_folder_path, str(epoch) + '.tar')

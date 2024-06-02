@@ -98,10 +98,10 @@ class DBRUnlearning:
             self.learning_rate_unlearning()
 
             # Unlearn
-            self.train_step_unlearning(arg, isolate_poison_data_loader, epoch)
+            self.train_step_unlearning(isolate_poison_data_loader, epoch)
 
             # Relearn
-            self.train_step_relearning(arg, isolate_clean_data_loader, epoch)
+            self.train_step_relearning(isolate_clean_data_loader, epoch)
 
             test_loss_cl, test_acc_cl, _ = test_epoch(arg, testloader_clean, self.model, self.criterion, epoch, 'clean')
             test_loss_bd, test_acc_bd, test_acc_robust = test_epoch(arg, testloader_bd, self.model, self.criterion, epoch, 'bd')

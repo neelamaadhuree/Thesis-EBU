@@ -15,7 +15,7 @@ class ABLUnlearning:
         self.model = model
         self.optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=1e-4)
         self.criterion = criterion
-        self.datalaoder_for_unlearnin = datalaoder_for_unlearning
+        self.datalaoder_for_unlearning = datalaoder_for_unlearning
         self.device = device
         self.args = args
 
@@ -77,6 +77,7 @@ class ABLUnlearning:
 
         for idx, (img, target,gt_label) in enumerate(train_loader, start=1):
             if self.device=='cuda':
+                img = normalization(self.args, img)
                 img = img.cuda()
                 target = target.cuda()
 
@@ -158,18 +159,18 @@ class ABLUnlearning:
         return acc_clean, acc_bd
 
 
-    def unlearn(self, testloader_clean, testloader_bd):
-        if self.arg.finetuning_ascent_model == True:
+    def unlearn(self,arg, testloader_clean, testloader_bd):
+        if arg.finetuning_ascent_model == True:
             # this is to improve the clean accuracy of isolation model, you can skip this step
             print('----------- Finetuning isolation model --------------')
-            for epoch in range(0, self.arg.finetuning_epochs):
+            for epoch in range(0, arg.finetuning_epochs):
                 self.learning_rate_finetuning(epoch)
-                self.train_step_finetuing(epoch + 1)
+                self.train_step_finetuing(arg,epoch + 1)
                 self.test(testloader_clean, testloader_bd, epoch + 1)
 
 
         print('----------- Model unlearning --------------')
-        for epoch in range(0, self.arg.unlearning_epochs):
+        for epoch in range(0, arg.unlearning_epochs):
             self.learning_rate_unlearning(epoch)
 
             # train stage
@@ -182,7 +183,7 @@ class ABLUnlearning:
             # evaluate on testing set
             print('testing the ascended model......')
             acc_clean, acc_bad = self.test(testloader_clean, testloader_bd, epoch + 1)
-            if self.arg.save:
+            if arg.save:
                 # save checkpoint at interval epoch
                 if epoch + 1 % self.arg.interval == 0:
                     is_best = True
