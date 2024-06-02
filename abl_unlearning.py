@@ -21,27 +21,33 @@ class ABLUnlearning:
 
     def train_step_unlearning(self, epoch):
         self.model.train()
-        total_clean, total_clean_correct = 0, 0
         losses = AverageMeter()
         top1 = AverageMeter()
         top5 = AverageMeter()
 
         for idx, (img, target, flag) in enumerate(self.datalaoder_for_unlearning, start=1):
-            img = normalization(self.arg, img)
-            img = img.cuda()
-            target = target.cuda()
+            if self.device=='cuda':
+                img = img.cuda()
+                target = target.cuda()
+
             output = self.model(img)
+
             loss = self.criterion(output, target)
+
+            prec1, prec5 = accuracy(output, target, topk=(1, 5))
+            losses.update(loss.item(), img.size(0))
+            top1.update(prec1.item(), img.size(0))
+            top5.update(prec5.item(), img.size(0))
+
             self.optimizer.zero_grad()
             (-loss).backward()  # Gradient ascent training
             self.optimizer.step()
 
-            total_clean_correct += torch.sum(torch.argmax(output[:], dim=1) == target[:])
-            total_clean += img.shape[0]
-            avg_acc_clean = total_clean_correct * 100.0 / total_clean
-            progress_bar(idx, len(self.datalaoder_for_unlearning),
-                        'Epoch: %d | Loss: %.3f | Train ACC: %.3f%% (%d/%d)' % (
-                        epoch, loss / (idx + 1), avg_acc_clean, total_clean_correct, total_clean))
+            if idx % self.args.print_freq == 0:
+                print('Epoch[{0}]:[{1:03}/{2:03}] '
+                    'loss:{losses.val:.4f}({losses.avg:.4f})  '
+                    'prec@1:{top1.val:.2f}({top1.avg:.2f})  '
+                    'prec@5:{top5.val:.2f}({top5.avg:.2f})'.format(epoch, idx, len(train_loader), losses=losses, top1=top1, top5=top5))
 
 
 
