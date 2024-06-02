@@ -16,6 +16,8 @@ import torchvision.transforms as transforms
 import ssd as ssd
 from abl_unlearning import ABLUnlearning 
 from dbr_unlearning import DBRUnlearning 
+from cf import ContinuousForgetting 
+
 
 from rnr import RNR
 
@@ -56,77 +58,6 @@ def load_dataset(arg):
     #return clean_samples[cleanDataReqLen:]+poison_samples[noOfPoison:], poison_samples[:noOfPoison]+ clean_samples[:cleanDataReqLen],clean_samples+ poison_samples[noOfPoison:], clean_samples+ poison_samples
 
     return clean_samples, poison_samples[:noOfPoison],clean_samples+ poison_samples[noOfPoison:], clean_samples+ poison_samples
-
-
-def trainable_params_(m):
-    return [p for p in m.parameters() if p.requires_grad]
-
-
-def train_cf(opt, model, epochs, train_loader):
-
-    optimizer = torch.optim.SGD(trainable_params_(model), lr=arg.lr, momentum=0.9, weight_decay=1e-4)
-    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=arg.schedule, gamma=arg.gamma)
-    criterion = nn.CrossEntropyLoss()
-    model.train()
-
-    
-    for epoch in range(epochs):
-        for param_group in optimizer.param_groups:
-            print(f"Epoch {epoch}, Learning Rate: {param_group['lr']}")
-        epoch_loss = 0.0
-        correct = 0
-        total = 0
-        for data, targets, flg in train_loader:
-            if opt.device=='cuda':
-                data = data.cuda()
-                targets = targets.cuda()
-            output = model(data)
-
-            loss = criterion(output, targets)
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-
-            epoch_loss += loss.item()
-            _, predicted = output.max(1)
-            total += targets.size(0)
-            correct += predicted.eq(targets).sum().item()
-        
-        scheduler.step()
-        train_accuracy = 100. * correct / total
-        print(f"Epoch {epoch+1}, Loss: {epoch_loss / len(train_loader)}, Train Accuracy: {train_accuracy}%")
-        
-            
-
-def getRetrainLayers(m, name, ret):
-    if isinstance(m, nn.Conv2d) or isinstance(m, nn.BatchNorm2d) or isinstance(m, nn.Linear):
-        ret.append((m, name))
-        #print(name)
-    for child_name, child in m.named_children():
-        getRetrainLayers(child, f'{name}.{child_name}', ret)
-    return ret
-
-
-def resetFinalResnet(model, num_retrain):
-    for param in model.parameters():
-        param.requires_grad = False
-    done = 0
-    ret = getRetrainLayers(model, 'M', [])
-    ret.reverse()
-    for idx in range(len(ret)):
-        if isinstance(ret[idx][0], nn.Conv2d) or isinstance(ret[idx][0], nn.Linear):
-            done += 1
-        for param in ret[idx][0].parameters():
-            param.requires_grad = True
-        if done >= num_retrain:
-            break
-
-
-    for name, param in model.named_parameters():
-        if param.requires_grad:
-            print(f"Trainable layer: {name}, shape: {param.shape}")
-
-    return model
 
 def ssd_tuning(model,
     forget_train_dl,
@@ -175,10 +106,7 @@ def main():
     transforms_list = []
     transforms_list.append(transforms.ToPILImage())
     transforms_list.append(transforms.Resize((arg.input_height, arg.input_width)))
-    # if arg.dataset == "imagenet":
-    #     transforms_list.append(transforms.RandomRotation(20))
-    #     transforms_list.append(transforms.RandomHorizontalFlip(0.5))
-    # else:
+   
     transforms_list.append(transforms.RandomCrop((arg.input_height, arg.input_width), padding=4))
     if arg.dataset == "cifar10":
         transforms_list.append(transforms.RandomHorizontalFlip())
@@ -226,25 +154,8 @@ def main():
         rnr_learning = RNR(model, criterion, arg)
         rnr_learning.unlearn(trainloader, testloader_clean, testloader_bd)
     elif arg.unlearn_type=='cfu':
-        k_layer = 10            
-        f_name = arg.log
-        csvFile = open(f_name, 'a', newline='')
-        writer = csv.writer(csvFile)
-        writer.writerow(['Epoch', 'Test_ACC', 'Test_ASR'])
-
-        # Test the orginal performance of the model
-        # test_loss_cl, test_acc_cl, _ = test_epoch(arg, testloader_clean, model, criterion, 0, 'clean')
-        # test_loss_bd, test_acc_bd, test_acc_robust = test_epoch(arg, testloader_bd, model, criterion, 0, 'bd')
-        # writer.writerow([-1, test_acc_cl.item(), test_acc_bd.item()])
-
-        model = resetFinalResnet(model, k_layer)
-        # do args to device if we have cudd
-        train_cf(arg, model, arg.epochs, isolate_clean_data_loader)
-        test_loss_cl, test_acc_cl, _ = test_epoch(arg, testloader_clean, model, criterion, 0, 'clean')
-        test_loss_bd, test_acc_bd, test_acc_robust = test_epoch(arg, testloader_bd, model, criterion, 0, 'bd')
-        cnt=-1
-        writer.writerow([cnt+1, test_acc_cl.item(), test_acc_bd.item()])
-        csvFile.close()
+        cf = ContinuousForgetting(arg, criterion)
+        cf.relearn(10, model, isolate_clean_data_loader, testloader_clean, testloader_bd)
     elif arg.unlearn_type=='ssd':        
         f_name = arg.log
         csvFile = open(f_name, 'a', newline='')
