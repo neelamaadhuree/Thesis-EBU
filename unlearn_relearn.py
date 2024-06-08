@@ -55,9 +55,11 @@ def load_dataset(arg):
     cleanDataReqLen = len(poison_samples) - noOfPoison
     print('noOfPoison - ',noOfPoison,'totalNoPoisonData - ',len(poison_samples))
 
-    #return clean_samples[cleanDataReqLen:]+poison_samples[noOfPoison:], poison_samples[:noOfPoison]+ clean_samples[:cleanDataReqLen],clean_samples+ poison_samples[noOfPoison:], clean_samples+ poison_samples
+    return clean_samples[cleanDataReqLen:]+poison_samples[noOfPoison:], poison_samples[:noOfPoison]+ clean_samples[:cleanDataReqLen],clean_samples+ poison_samples[noOfPoison:], clean_samples+ poison_samples
+    #return clean_samples[cleanDataReqLen:]+poison_samples[4400:], poison_samples[:noOfPoison]+ clean_samples[:20],clean_samples+ poison_samples[noOfPoison:], clean_samples+ poison_samples 
+    #return clean_samples, poison_samples[:noOfPoison],clean_samples+ poison_samples[noOfPoison:], clean_samples+ poison_samples
 
-    return clean_samples, poison_samples[:noOfPoison],clean_samples+ poison_samples[noOfPoison:], clean_samples+ poison_samples
+
 
 def ssd_tuning(model,
     forget_train_dl,
@@ -148,7 +150,7 @@ def main():
         dbr_unlearning = DBRUnlearning(model, criterion, arg)
         dbr_unlearning.unlearn(testloader_clean, testloader_bd, isolate_poison_data_loader, isolate_clean_data_loader)
     elif arg.unlearn_type=='abl':
-        abl_unlearning = ABLUnlearning(model, criterion, isolate_other_data, arg, arg.device)
+        abl_unlearning = ABLUnlearning(model, criterion, isolate_poison_data_loader, isolate_other_data_loader, arg, arg.device)
         abl_unlearning.unlearn(arg, testloader_clean, testloader_bd)
     elif arg.unlearn_type=='rnr':
         rnr_learning = RNR(model, criterion, arg)

@@ -85,7 +85,7 @@ class RNR:
                                         arg.model, arg.trigger_type)
         if not os.path.exists(save_folder_path):
             os.makedirs(save_folder_path)
-        arg.log = os.path.join(save_folder_path, 'withTrans.csv')
+        arg.log = os.path.join(save_folder_path, 'rnr_datachg.csv')
         f_name = arg.log
         csvFile = open(f_name, 'a', newline='')
         writer = csv.writer(csvFile)

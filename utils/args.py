@@ -16,7 +16,7 @@ def get_args():
     parser.add_argument("--input_width", type=int, default=None)
     parser.add_argument("--input_channel", type=int, default=None)
 
-    parser.add_argument('--epochs', type=int, default=200)
+    parser.add_argument('--epochs', type=int, default=20)
     parser.add_argument('--batch_size', type=int, default=128)
     parser.add_argument("--num_workers", type=float, default=4)
     parser.add_argument('--lr', type=float, default=0.01)
