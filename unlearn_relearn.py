@@ -112,7 +112,6 @@ def transformer():
 def main():
     global arg
     arg = args.get_args()
-    trainloader = get_dataloader_train(arg)
 
     # Dataset
     clean_data, poison_data = load_dataset(arg)
@@ -157,6 +156,7 @@ def main():
         abl_unlearning = ABLUnlearning(model, criterion, isolate_poison_data_loader, isolate_clean_data_loader, arg, arg.device)
         abl_unlearning.unlearn(arg, testloader_clean, testloader_bd)
     elif arg.unlearn_type=='rnr':
+        trainloader = get_dataloader_train(arg)
         model_rnr = get_network(arg)
         model_rnr = torch.nn.DataParallel(model_rnr)
         rnr_learning = RNR(model_rnr, criterion, arg)

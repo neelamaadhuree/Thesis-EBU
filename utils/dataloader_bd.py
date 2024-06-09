@@ -73,9 +73,7 @@ class Dataset_npy(torch.utils.data.Dataset):
 
 def get_dataloader_train(opt):
     train = True
-    if opt.dataset == "gtsrb":
-        dataset = GTSRB(opt, train)
-    elif opt.dataset == "cifar10":
+    if opt.dataset == "cifar10":
         dataset = torchvision.datasets.CIFAR10(opt.data_root, train, download=True)
     elif opt.dataset == "cifar100":
         dataset = torchvision.datasets.CIFAR100(opt.data_root, train, download=True)
@@ -98,9 +96,7 @@ def get_dataloader_train(opt):
 
 def get_dataloader_test(opt):
     train = False
-    if opt.dataset == "gtsrb":
-        dataset = GTSRB(opt, train)
-    elif opt.dataset == "cifar10":
+    if opt.dataset == "cifar10":
         dataset = torchvision.datasets.CIFAR10(opt.data_root, train, download=True)
     elif opt.dataset == "cifar100":
         dataset = torchvision.datasets.CIFAR100(opt.data_root, train, download=True)
@@ -472,60 +468,5 @@ def get_transform(opt, train=True):
     transforms3 = transforms.Compose(transforms_list)
 
     return transforms1, transforms2, transforms3
-
-
-
-class GTSRB(data.Dataset):
-    def __init__(self, opt, train):
-        super(GTSRB, self).__init__()
-        if train:
-            self.data_folder = os.path.join(opt.data_root, "Train")
-            self.images, self.labels = self._get_data_train_list()
-            if not os.path.isdir(self.data_folder):
-                os.makedirs(self.data_folder)
-        else:
-            self.data_folder = os.path.join(opt.data_root, "Test")
-            self.images, self.labels = self._get_data_test_list()
-            if not os.path.isdir(self.data_folder):
-                os.makedirs(self.data_folder)
-
-        # self.transforms = transforms
-
-    def _get_data_train_list(self):
-        images = []
-        labels = []
-        for c in range(0, 43):
-            prefix = self.data_folder + "/" + format(c, "05d") + "/"
-            if not os.path.isdir(prefix):
-                os.makedirs(prefix)
-            gtFile = open(prefix + "GT-" + format(c, "05d") + ".csv")
-            gtReader = csv.reader(gtFile, delimiter=";")
-            next(gtReader)
-            for row in gtReader:
-                images.append(prefix + row[0])
-                labels.append(int(row[7]))
-            gtFile.close()
-        return images, labels
-
-    def _get_data_test_list(self):
-        images = []
-        labels = []
-        prefix = os.path.join(self.data_folder, "GT-final_test.csv")
-        gtFile = open(prefix)
-        gtReader = csv.reader(gtFile, delimiter=";")
-        next(gtReader)
-        for row in gtReader:
-            images.append(self.data_folder + "/" + row[0])
-            labels.append(int(row[7]))
-        return images, labels
-
-    def __len__(self):
-        return len(self.images)
-
-    def __getitem__(self, index):
-        image = Image.open(self.images[index])
-        # image = self.transforms(image)
-        label = self.labels[index]
-        return image, label
 
 
