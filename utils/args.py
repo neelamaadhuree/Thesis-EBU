@@ -32,8 +32,8 @@ def get_args():
 
     parser.add_argument('--gamma_low', type=float, default=None, help='<=gamma_low is clean') # \gamma_c
     parser.add_argument('--gamma_high', type=float, default=None, help='>=gamma_high is poisoned') # \gamma_p
-    parser.add_argument('--clean_ratio', type=float, default=0.80, help='ratio of clean data') # \alpha_c
-    parser.add_argument('--poison_ratio', type=float, default=0.20, help='ratio of poisoned data') # \alpha_p
+    parser.add_argument('--clean_ratio', type=float, default=0.20, help='ratio of clean data') # \alpha_c
+    parser.add_argument('--poison_ratio', type=float, default=0.05, help='ratio of poisoned data') # \alpha_p
 
     parser.add_argument('--gamma', type=float, default=0.1, help='LR is multiplied by gamma on schedule.')
     parser.add_argument('--schedule', type=int, nargs='+', default=[10, 20], help='Decrease learning rate at these epochs.')

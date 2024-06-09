@@ -60,9 +60,10 @@ def load_dataset(arg):
     #rnr clean data req= 900 
     #45500-900clean +900 poisoned
     #45500 cleaned 
-    return clean_samples[cleanDataReqLen:]+poison_samples[noOfPoison:], poison_samples[:noOfPoison]+ clean_samples[:cleanDataReqLen],clean_samples+ poison_samples[noOfPoison:], clean_samples+ poison_samples
+    
+    #return clean_samples[cleanDataReqLen:]+poison_samples[noOfPoison:], poison_samples[:noOfPoison]+ clean_samples[:cleanDataReqLen],clean_samples+ poison_samples[noOfPoison:], clean_samples+ poison_samples
     #return clean_samples[cleanDataReqLen:]+poison_samples[4400:], poison_samples[:noOfPoison]+ clean_samples[:20],clean_samples+ poison_samples[noOfPoison:], clean_samples+ poison_samples 
-    #return clean_samples, poison_samples[:noOfPoison],clean_samples+ poison_samples[noOfPoison:], clean_samples+ poison_samples
+    return clean_samples, poison_samples[:noOfPoison],clean_samples+ poison_samples[noOfPoison:], clean_samples+ poison_samples
 
 
 

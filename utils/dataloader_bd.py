@@ -110,8 +110,8 @@ def get_dataloader_test(opt):
     if opt.unlearn_type=='dbr' or opt.unlearn_type=='rnr' or opt.unlearn_type=='cfu' or opt.unlearn_type=='ssd':
         transform = get_transform(opt, train)
     if opt.unlearn_type=='abl':
-        transform = transforms.Compose([transforms.ToTensor()
-                                  ])
+        transform = transforms.Compose([transforms.ToTensor()])
+    
     test_data_clean = DatasetBD(opt, full_dataset=dataset, inject_portion=0, transform=transform, mode='test')
     test_data_bad = DatasetBD(opt, full_dataset=dataset, inject_portion=1, transform=transform, mode='test')
 
