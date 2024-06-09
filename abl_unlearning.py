@@ -1,5 +1,5 @@
 
-from utils.utils import accuracy,save_checkpoint, progress_bar, normalization,AverageMeter
+from utils.utils import accuracy,save_checkpoint, progress_bar, normalization, AverageMeter
 import torch
 import pandas as pd
 
@@ -153,7 +153,7 @@ class ABLUnlearning:
         print(f'Epoch: {epoch}, Clean Test Accuracy: {clean_acc:.2f}, Attack Success Rate: {asr:.2f}')
 
         # Save training progress
-        log_root = self.args.log_root + '/ABL_unlearning_datachg.csv'
+        log_root = self.args.log_root + '/ABL_unlearning_cln.csv'
         test_process.append(
             (epoch, clean_acc, asr)
         )
@@ -166,6 +166,7 @@ class ABLUnlearning:
     def unlearn(self,arg, testloader_clean, testloader_bd):
         if arg.finetuning_ascent_model == True:
             # this is to improve the clean accuracy of isolation model, you can skip this step
+            #self.test(testloader_clean, testloader_bd, -1)
             print('----------- Finetuning isolation model --------------')
             for epoch in range(0, arg.finetuning_epochs):
                 self.learning_rate_finetuning(epoch)

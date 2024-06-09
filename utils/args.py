@@ -36,7 +36,7 @@ def get_args():
     parser.add_argument('--poison_ratio', type=float, default=0.20, help='ratio of poisoned data') # \alpha_p
 
     parser.add_argument('--gamma', type=float, default=0.1, help='LR is multiplied by gamma on schedule.')
-    parser.add_argument('--schedule', type=int, nargs='+', default=[100, 150], help='Decrease learning rate at these epochs.')
+    parser.add_argument('--schedule', type=int, nargs='+', default=[10, 20], help='Decrease learning rate at these epochs.')
     parser.add_argument('-warm', type=int, default=1, help='warm up training phase')
 
     parser.add_argument('--trans1', type=str, default='rotate') # the first data augmentation

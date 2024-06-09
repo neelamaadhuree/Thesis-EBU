@@ -85,13 +85,20 @@ class RNR:
                                         arg.model, arg.trigger_type)
         if not os.path.exists(save_folder_path):
             os.makedirs(save_folder_path)
-        arg.log = os.path.join(save_folder_path, 'rnr_datachg.csv')
+        arg.log = os.path.join(save_folder_path, 'rnr_scratch.csv')
         f_name = arg.log
         csvFile = open(f_name, 'a', newline='')
         writer = csv.writer(csvFile)
         writer.writerow(
             ['Epoch', 'Train_Loss', 'Train_ACC',  'Train_R-ACC', 'Test_Loss_cl', 'Test_ACC', 'Test_Loss_bd',
             'Test_ASR', 'Test_R-ACC'])
+        
+        test_loss_cl, test_acc_cl, _ = test_epoch(arg, testloader_clean, self.model, self.criterion, -1, 'clean')
+        test_loss_bd, test_acc_bd, test_acc_robust = test_epoch(arg, testloader_bd, self.model, self.criterion, -1, 'bd')
+        writer.writerow(
+                [-1, 0, 0, 0, test_loss_cl, test_acc_cl.item(),
+                test_loss_bd, test_acc_bd.item(), test_acc_robust.item()])
+        
         for epoch in tqdm(range(start_epoch, arg.epochs)):
             train_loss, train_acc, train_racc = self.train_epoch_rnr(trainloader, self.criterion, epoch)
             test_loss_cl, test_acc_cl, _ = test_epoch(arg, testloader_clean, self.model, self.criterion, epoch, 'clean')

@@ -54,7 +54,12 @@ def load_dataset(arg):
     noOfPoison=int(len(poison_samples)*arg.poison_ratio)
     cleanDataReqLen = len(poison_samples) - noOfPoison
     print('noOfPoison - ',noOfPoison,'totalNoPoisonData - ',len(poison_samples))
-
+    #poison size fixed 4500 
+    #3600 poison samples + 900 clean samples 
+    #80% --- poison samples 3600 
+    #rnr clean data req= 900 
+    #45500-900clean +900 poisoned
+    #45500 cleaned 
     return clean_samples[cleanDataReqLen:]+poison_samples[noOfPoison:], poison_samples[:noOfPoison]+ clean_samples[:cleanDataReqLen],clean_samples+ poison_samples[noOfPoison:], clean_samples+ poison_samples
     #return clean_samples[cleanDataReqLen:]+poison_samples[4400:], poison_samples[:noOfPoison]+ clean_samples[:20],clean_samples+ poison_samples[noOfPoison:], clean_samples+ poison_samples 
     #return clean_samples, poison_samples[:noOfPoison],clean_samples+ poison_samples[noOfPoison:], clean_samples+ poison_samples
@@ -141,6 +146,7 @@ def main():
     # Prepare model, optimizer, scheduler
     model = get_network(arg)
     model = torch.nn.DataParallel(model)
+    ##optimizer = torch.optim.SGD(model.parameters(), lr=arg.lr, momentum=0.9, weight_decay=5e-4)
     checkpoint = torch.load(arg.checkpoint_load)
     print("Continue training...")
     model.load_state_dict(checkpoint['model'])
@@ -150,10 +156,12 @@ def main():
         dbr_unlearning = DBRUnlearning(model, criterion, arg)
         dbr_unlearning.unlearn(testloader_clean, testloader_bd, isolate_poison_data_loader, isolate_clean_data_loader)
     elif arg.unlearn_type=='abl':
-        abl_unlearning = ABLUnlearning(model, criterion, isolate_poison_data_loader, isolate_other_data_loader, arg, arg.device)
+        abl_unlearning = ABLUnlearning(model, criterion, isolate_poison_data_loader, isolate_clean_data_loader, arg, arg.device)
         abl_unlearning.unlearn(arg, testloader_clean, testloader_bd)
     elif arg.unlearn_type=='rnr':
-        rnr_learning = RNR(model, criterion, arg)
+        model_rnr = get_network(arg)
+        model_rnr = torch.nn.DataParallel(model_rnr)
+        rnr_learning = RNR(model_rnr, criterion, arg)
         rnr_learning.unlearn(trainloader, testloader_clean, testloader_bd)
     elif arg.unlearn_type=='cfu':
         cf = ContinuousForgetting(arg, criterion)
