@@ -51,9 +51,6 @@ def load_dataset(arg):
             else:
                 flag = 2
                 poison_samples.append((img_np, target_np, flag))
-    noOfPoison=int(len(poison_samples)*arg.poison_ratio)
-    cleanDataReqLen = len(poison_samples) - noOfPoison
-    print('noOfPoison - ',noOfPoison,'totalNoPoisonData - ',len(poison_samples))
     #poison size fixed 4500 
     #3600 poison samples + 900 clean samples 
     #80% --- poison samples 3600 
@@ -63,7 +60,7 @@ def load_dataset(arg):
     
     #return clean_samples[cleanDataReqLen:]+poison_samples[noOfPoison:], poison_samples[:noOfPoison]+ clean_samples[:cleanDataReqLen],clean_samples+ poison_samples[noOfPoison:], clean_samples+ poison_samples
     #return clean_samples[cleanDataReqLen:]+poison_samples[4400:], poison_samples[:noOfPoison]+ clean_samples[:20],clean_samples+ poison_samples[noOfPoison:], clean_samples+ poison_samples 
-    return clean_samples, poison_samples[:noOfPoison],clean_samples+ poison_samples[noOfPoison:], clean_samples+ poison_samples
+    return clean_samples, poison_samples
 
 
 
@@ -100,17 +97,7 @@ def ssd_tuning(model,
     pdr.modify_weight(original_importances, sample_importances)
     return model
 
-def main():
-    global arg
-    arg = args.get_args()
-    trainloader = get_dataloader_train(arg)
-
-    # Dataset
-    isolate_clean_data,isolate_poison_data,isolate_other_data,full_data = load_dataset(arg)
-    shuffle(full_data)
-    # Dataset
-    # folder_path = os.path.join('./saved/separated_samples', 'poison_rate_'+str(arg.poison_rate), arg.dataset, arg.model, arg.trigger_type+'_'+str(arg.clean_ratio)+'_'+str(arg.poison_ratio))
-
+def transformer():
     transforms_list = []
     transforms_list.append(transforms.ToPILImage())
     transforms_list.append(transforms.Resize((arg.input_height, arg.input_width)))
@@ -120,27 +107,37 @@ def main():
         transforms_list.append(transforms.RandomHorizontalFlip())
     transforms_list.append(transforms.ToTensor())
 
-    tf_compose_finetuning = transforms.Compose(transforms_list)
-    # data_path_clean = os.path.join(folder_path, 'clean_samples.npy')
-    # isolate_clean_data = np.load(data_path_clean, allow_pickle=True)
-    clean_data_tf = Dataset_npy(full_dataset=isolate_clean_data, transform=tf_compose_finetuning)
-    isolate_clean_data_loader = DataLoader(dataset=clean_data_tf, batch_size=arg.batch_size, shuffle=True)
+    return transforms.Compose(transforms_list)
 
-    tf_compose_unlearning = transforms.Compose(transforms_list)
-    # data_path_poison = os.path.join(folder_path, 'poison_samples.npy')
-    # isolate_poison_data = np.load(data_path_poison, allow_pickle=True)
-    poison_data_tf = Dataset_npy(full_dataset=isolate_poison_data, transform=tf_compose_unlearning)
-    isolate_poison_data_loader = DataLoader(dataset=poison_data_tf, batch_size=arg.batch_size, shuffle=True)
+def main():
+    global arg
+    arg = args.get_args()
+    trainloader = get_dataloader_train(arg)
+
+    # Dataset
+    clean_data, poison_data = load_dataset(arg)
+
+    # Dataset
+    # folder_path = os.path.join('./saved/separated_samples', 'poison_rate_'+str(arg.poison_rate), arg.dataset, arg.model, arg.trigger_type+'_'+str(arg.clean_ratio)+'_'+str(arg.poison_ratio))
+
+    tf_compose_finetuning = transformer()
+    clean_data_tf = Dataset_npy(full_dataset=clean_data, transform=tf_compose_finetuning)
+    clean_data_loader = DataLoader(dataset=clean_data_tf, batch_size=arg.batch_size, shuffle=True)
+
+
+    tf_compose_unlearning = transformer()
+    poison_data_tf = Dataset_npy(full_dataset=poison_data, transform=tf_compose_unlearning)
+    poison_data_loader = DataLoader(dataset=poison_data_tf, batch_size=arg.batch_size, shuffle=True)
 
     
-    full_data_tf = Dataset_npy(full_dataset=full_data, transform=tf_compose_unlearning)
-    full_data_loader = DataLoader(dataset=full_data_tf, batch_size=arg.batch_size, shuffle=True)
+    # full_data_tf = Dataset_npy(full_dataset=full_data, transform=tf_compose_unlearning)
+    # full_data_loader = DataLoader(dataset=full_data_tf, batch_size=arg.batch_size, shuffle=True)
 
-    tf_compose_unlearning = transforms.Compose(transforms_list)
-    # data_path_poison = os.path.join(folder_path, 'poison_samples.npy')
-    # isolate_poison_data = np.load(data_path_poison, allow_pickle=True)
-    poison_data_tf = Dataset_npy(full_dataset=isolate_other_data, transform=tf_compose_unlearning)
-    isolate_other_data_loader = DataLoader(dataset=poison_data_tf, batch_size=arg.batch_size, shuffle=True)
+    # tf_compose_unlearning = transforms.Compose(transforms_list)
+    # # data_path_poison = os.path.join(folder_path, 'poison_samples.npy')
+    # # isolate_poison_data = np.load(data_path_poison, allow_pickle=True)
+    # poison_data_tf = Dataset_npy(full_dataset=isolate_other_data, transform=tf_compose_unlearning)
+    # isolate_other_data_loader = DataLoader(dataset=poison_data_tf, batch_size=arg.batch_size, shuffle=True)
 
     testloader_clean, testloader_bd = get_dataloader_test(arg)
 
@@ -155,7 +152,7 @@ def main():
 
     if arg.unlearn_type=='dbr':
         dbr_unlearning = DBRUnlearning(model, criterion, arg)
-        dbr_unlearning.unlearn(testloader_clean, testloader_bd, isolate_poison_data_loader, isolate_clean_data_loader)
+        dbr_unlearning.unlearn(testloader_clean, testloader_bd, poison_data_loader, clean_data_loader)
     elif arg.unlearn_type=='abl':
         abl_unlearning = ABLUnlearning(model, criterion, isolate_poison_data_loader, isolate_clean_data_loader, arg, arg.device)
         abl_unlearning.unlearn(arg, testloader_clean, testloader_bd)
