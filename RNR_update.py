@@ -27,7 +27,7 @@ class RNR:
 
         arg = self.arg
 
-        for i, (inputs, labels, gt_labels, isCleans) in enumerate(isolate_clean_data_loader):
+        for i, (inputs, labels, isCleans) in enumerate(isolate_clean_data_loader):
             # Normalize the input images
             inputs = normalization(arg, inputs[1])  # Assuming 'inputs' is already correctly shaped
 
@@ -43,7 +43,7 @@ class RNR:
             self.optimizer.step()
 
             total_clean_correct += torch.sum(torch.argmax(outputs[:], dim=1) == labels[:])
-            total_robust_correct += torch.sum(torch.argmax(outputs[:], dim=1) == gt_labels[:])
+            #total_robust_correct += torch.sum(torch.argmax(outputs[:], dim=1) == gt_labels[:])
             total_clean += inputs.shape[0]
         
             # Accumulate statistics
@@ -55,16 +55,15 @@ class RNR:
             # Display progress
             if total_clean > 0:  # Avoid division by zero
                 avg_acc_clean = total_clean_correct * 100.0 / total_clean
-                avg_acc_robust = total_robust_correct * 100.0 / total_clean
+                #avg_acc_robust = total_robust_correct * 100.0 / total_clean
                 progress_bar(i, len(isolate_clean_data_loader),
-                            'Epoch: %d | Loss: %.3f | Train ACC: %.3f%% (%d/%d) | Train R-ACC: %.3f%% (%d/%d)' % (
-                            epoch, train_loss / (i + 1), avg_acc_clean, total_clean_correct, total_clean,
-                            avg_acc_robust, total_robust_correct, total_clean))
+                            'Epoch: %d | Loss: %.3f | Train ACC: %.3f%% (%d/%d)' % (
+                            epoch, train_loss / (i + 1), avg_acc_clean, total_clean_correct, total_clean))
 
         # Step the learning rate scheduler
         self.scheduler.step()
 
-        return train_loss / (i + 1), avg_acc_clean, avg_acc_robust
+        return train_loss / (i + 1), avg_acc_clean
 
     def unlearn(self, isolate_clean_data_loader, testloader_clean, testloader_bd):
     
@@ -94,7 +93,7 @@ class RNR:
                 test_loss_bd, test_acc_bd.item(), test_acc_robust.item()])
         
         for epoch in tqdm(range(start_epoch, arg.epochs)):
-            train_loss, train_acc, train_racc = self.train_epoch_rnr(isolate_clean_data_loader, self.criterion, epoch)
+            train_loss, train_acc = self.train_epoch_rnr(isolate_clean_data_loader, self.criterion, epoch)
             test_loss_cl, test_acc_cl, _ = test_epoch(arg, testloader_clean, self.model, self.criterion, epoch, 'clean')
             test_loss_bd, test_acc_bd, test_acc_robust = test_epoch(arg, testloader_bd, self.model, self.criterion, epoch, 'bd')
 
@@ -103,6 +102,6 @@ class RNR:
             save_checkpoint(save_file_path, epoch, self.model, self.optimizer, self.scheduler)
 
             writer.writerow(
-                [epoch, train_loss, train_acc.item(), train_racc.item(), test_loss_cl, test_acc_cl.item(),
+                [epoch, train_loss, train_acc.item(), test_loss_cl, test_acc_cl.item(),
                 test_loss_bd, test_acc_bd.item(), test_acc_robust.item()])
         csvFile.close()

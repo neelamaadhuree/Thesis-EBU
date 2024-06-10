@@ -137,6 +137,7 @@ def main():
 
     clean_data_loader = get_loader(mix_clean)
     poison_data_loader = get_loader(mix_poison)
+    
 
     
     # full_data_tf = Dataset_npy(full_dataset=full_data, transform=tf_compose_unlearning)
