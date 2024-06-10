@@ -19,7 +19,7 @@ from dbr_unlearning import DBRUnlearning
 from cf import ContinuousForgetting 
 
 
-from rnr import RNR
+from RNR_update import RNR
 
 from random import shuffle
 from utils import args
@@ -61,6 +61,13 @@ def load_dataset(arg):
     #return clean_samples[cleanDataReqLen:]+poison_samples[noOfPoison:], poison_samples[:noOfPoison]+ clean_samples[:cleanDataReqLen],clean_samples+ poison_samples[noOfPoison:], clean_samples+ poison_samples
     #return clean_samples[cleanDataReqLen:]+poison_samples[4400:], poison_samples[:noOfPoison]+ clean_samples[:20],clean_samples+ poison_samples[noOfPoison:], clean_samples+ poison_samples 
     return clean_samples, poison_samples
+
+def data_mix(clean_samples,poison_samples, poison_ratio):
+
+    noOfPoison=int(len(poison_samples)*poison_ratio)
+    cleanDataReqLen = len(poison_samples) - noOfPoison
+    print('noOfPoison - ',noOfPoison,'totalNoPoisonData - ',len(poison_samples), 'clean data included with poisons', cleanDataReqLen)
+    return clean_samples[cleanDataReqLen:]+poison_samples[noOfPoison:], poison_samples[:noOfPoison]+ clean_samples[:cleanDataReqLen]
 
 
 
@@ -109,24 +116,27 @@ def transformer():
 
     return transforms.Compose(transforms_list)
 
+
+def get_loader(data):
+    tf_compose_finetuning = transformer()
+    clean_data_tf = Dataset_npy(full_dataset=data, transform=tf_compose_finetuning)
+    return DataLoader(dataset=clean_data_tf, batch_size=arg.batch_size, shuffle=True)
+
 def main():
     global arg
     arg = args.get_args()
 
     # Dataset
+    poison_ratio=arg.poison_ratio
     clean_data, poison_data = load_dataset(arg)
-
+    #mix_clean, mix_poison = data_mix(clean_data, poison_data,poison_ratio)
     # Dataset
     # folder_path = os.path.join('./saved/separated_samples', 'poison_rate_'+str(arg.poison_rate), arg.dataset, arg.model, arg.trigger_type+'_'+str(arg.clean_ratio)+'_'+str(arg.poison_ratio))
+    mix_clean=clean_data
+    mix_poison=poison_data
 
-    tf_compose_finetuning = transformer()
-    clean_data_tf = Dataset_npy(full_dataset=clean_data, transform=tf_compose_finetuning)
-    clean_data_loader = DataLoader(dataset=clean_data_tf, batch_size=arg.batch_size, shuffle=True)
-
-
-    tf_compose_unlearning = transformer()
-    poison_data_tf = Dataset_npy(full_dataset=poison_data, transform=tf_compose_unlearning)
-    poison_data_loader = DataLoader(dataset=poison_data_tf, batch_size=arg.batch_size, shuffle=True)
+    clean_data_loader = get_loader(mix_clean)
+    poison_data_loader = get_loader(mix_poison)
 
     
     # full_data_tf = Dataset_npy(full_dataset=full_data, transform=tf_compose_unlearning)
@@ -156,11 +166,11 @@ def main():
         abl_unlearning = ABLUnlearning(model, criterion, isolate_poison_data_loader, isolate_clean_data_loader, arg, arg.device)
         abl_unlearning.unlearn(arg, testloader_clean, testloader_bd)
     elif arg.unlearn_type=='rnr':
-        trainloader = get_dataloader_train(arg)
+        #trainloader = get_dataloader_train(arg)
         model_rnr = get_network(arg)
         model_rnr = torch.nn.DataParallel(model_rnr)
         rnr_learning = RNR(model_rnr, criterion, arg)
-        rnr_learning.unlearn(trainloader, testloader_clean, testloader_bd)
+        rnr_learning.unlearn(clean_data_loader, testloader_clean, testloader_bd)
     elif arg.unlearn_type=='cfu':
         cf = ContinuousForgetting(arg, criterion)
         cf.relearn(10, model, isolate_clean_data_loader, testloader_clean, testloader_bd)
