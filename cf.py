@@ -30,7 +30,7 @@ class ContinuousForgetting:
             for param_group in optimizer.param_groups:
                 print(f"Epoch {epoch}, Learning Rate: {param_group['lr']}")
             
-            for idx, (inputs, target,gt_label) in enumerate(train_loader, start=1):
+            for idx, (inputs, target, labels) in enumerate(train_loader, start=1):
                 inputs = normalization(args, inputs)  # Assuming 'inputs' is already correctly shaped
 
                 if args.device == 'cuda':
