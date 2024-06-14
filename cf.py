@@ -3,6 +3,8 @@ import time
 from torch import nn
 from test_model import test_epoch
 import csv
+from utils.utils import accuracy, normalization, AverageMeter
+
 
 class ContinuousForgetting:
 
@@ -20,11 +22,17 @@ class ContinuousForgetting:
         criterion = self.criterion
         model.train()
 
+        losses = AverageMeter()
+        top1 = AverageMeter()
+        top5 = AverageMeter()
+
         for epoch in range(epochs):
             for param_group in optimizer.param_groups:
                 print(f"Epoch {epoch}, Learning Rate: {param_group['lr']}")
             
-            for inputs, labels, flg in train_loader:
+            for idx, (img, target,gt_label) in enumerate(train_loader, start=1):
+                inputs = normalization(args, inputs)  # Assuming 'inputs' is already correctly shaped
+
                 if args.device == 'cuda':
                     inputs, labels = inputs.cuda(non_blocking=True), labels.cuda(non_blocking=True)
                     model = model.cuda()
@@ -32,12 +40,23 @@ class ContinuousForgetting:
                 
                 outputs = model(inputs)
                 loss = criterion(outputs, labels)
-                
+            
+                prec1, prec5 = accuracy(outputs, target, topk=(1, 5))
+                losses.update(loss.item(), img.size(0))
+                top1.update(prec1.item(), img.size(0))
+                top5.update(prec5.item(), img.size(0))
+
                 optimizer.zero_grad()
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip)
                 optimizer.step()
             scheduler.step()
+
+            if idx % self.args.print_freq == 0:
+                print('Epoch[{0}]:[{1:03}/{2:03}] '
+                    'loss:{losses.val:.4f}({losses.avg:.4f})  '
+                    'prec@1:{top1.val:.2f}({top1.avg:.2f})  '
+                    'prec@5:{top5.val:.2f}({top5.avg:.2f})'.format(epoch, idx, len(train_loader), losses=losses, top1=top1, top5=top5))
         return model, optimizer
        
             
