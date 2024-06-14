@@ -13,16 +13,16 @@ class ContinuousForgetting:
     def trainable_params_(self, m):
         return [p for p in m.parameters() if p.requires_grad]
 
-    def train_cf(self, model, epochs, train_loader, logger):
+    def train_cf(self, model, epochs, train_loader):
         args = self.args
         optimizer = torch.optim.SGD(self.trainable_params_(model), lr=args.lr, momentum=0.9, weight_decay=1e-4)
         scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=args.schedule, gamma=args.gamma)
         criterion = self.criterion
         model.train()
 
-        for epoch in range(epochs):            
+        for epoch in range(epochs):
             for param_group in optimizer.param_groups:
-                logger.info(f"Epoch {epoch}, Learning Rate: {param_group['lr']}")
+                print(f"Epoch {epoch}, Learning Rate: {param_group['lr']}")
             
             for inputs, labels, flg in train_loader:
                 if args.device == 'cuda':
@@ -73,7 +73,7 @@ class ContinuousForgetting:
             writer = csv.writer(csvFile)
             writer.writerow(['Epoch', 'Test_ACC', 'Test_ASR'])
             model = self.resetFinalResnet(model, k_layer)
-            self.train_cf(model, self.args.epoch, isolate_clean_data_loader)
+            self.train_cf(model, self.args.epochs, isolate_clean_data_loader)
             test_loss_cl, test_acc_cl, _ = test_epoch(self.args, testloader_clean, model, self.criterion, 0, 'clean')
             test_loss_bd, test_acc_bd, test_acc_robust = test_epoch(self.args, testloader_bd, model, self.criterion, 0, 'bd')
             writer.writerow([0, test_acc_cl.item(), test_acc_bd.item()])

@@ -21,7 +21,7 @@ def get_args():
     parser.add_argument("--num_workers", type=float, default=4)
     parser.add_argument('--lr', type=float, default=0.01)
 
-    parser.add_argument('--poison_rate', type=float, default=0.1) # decides how many training samples are poisoned
+    parser.add_argument('--poison_rate', type=float, default=0.01) # decides how many training samples are poisoned
     parser.add_argument('--clean_rate', type=float, default=1.0) # decides how many clean training samples are provided in some defense methods
     parser.add_argument('--target_type', type=str, default='all2one', help='all2one, all2all, cleanLabel') 
     parser.add_argument('--target_label', type=int, default=0)
@@ -35,8 +35,8 @@ def get_args():
     parser.add_argument('--clean_ratio', type=float, default=0.20, help='ratio of clean data') # \alpha_c
     parser.add_argument('--poison_ratio', type=float, default=0.05, help='ratio of poisoned data') # \alpha_p
 
-    parser.add_argument('--gamma', type=float, default=0.1, help='LR is multiplied by gamma on schedule.')
-    parser.add_argument('--schedule', type=int, nargs='+', default=[10, 20], help='Decrease learning rate at these epochs.')
+    parser.add_argument('--gamma', type=float, default=0.01, help='LR is multiplied by gamma on schedule.')
+    parser.add_argument('--schedule', type=int, nargs='+', default=[20, 30], help='Decrease learning rate at these epochs.')
     parser.add_argument('-warm', type=int, default=1, help='warm up training phase')
 
     parser.add_argument('--trans1', type=str, default='rotate') # the first data augmentation
@@ -52,8 +52,11 @@ def get_args():
     parser.add_argument('--print_freq', type=int, default=200, help='frequency of showing training results on console')
     parser.add_argument('--finetuning_ascent_model', type=str, default=True, help='whether finetuning model')
     parser.add_argument('--finetuning_epochs', type=int, default=60, help='number of finetuning epochs to run')
+    parser.add_argument('--clip', type=float, default=10.0, metavar='M', help='Gradient clipping (default: 10)')
 
     arg = parser.parse_args()
+    # CF 
+    
 
     # Set image class and size
     if arg.dataset == "cifar10":

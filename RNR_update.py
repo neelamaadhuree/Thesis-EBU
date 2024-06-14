@@ -29,10 +29,10 @@ class RNR:
 
         for i, (inputs, labels, isCleans) in enumerate(isolate_clean_data_loader):
             # Normalize the input images
-            inputs = normalization(arg, inputs[1])  # Assuming 'inputs' is already correctly shaped
+            inputs = normalization(arg, inputs)  # Assuming 'inputs' is already correctly shaped
 
             # Move data to the appropriate device (CPU or GPU)
-            inputs, labels, gt_labels = inputs.to(arg.device), labels.to(arg.device), gt_labels.to(arg.device)
+            inputs, labels, isCleans = inputs.to(arg.device), labels.to(arg.device), isCleans.to(arg.device)
 
             outputs = self.model(inputs)
             loss = self.criterion(outputs, labels)

@@ -69,7 +69,9 @@ def data_mix(clean_samples,poison_samples, poison_ratio):
     print('noOfPoison - ',noOfPoison,'totalNoPoisonData - ',len(poison_samples), 'clean data included with poisons', cleanDataReqLen)
     return clean_samples[cleanDataReqLen:]+poison_samples[noOfPoison:], poison_samples[:noOfPoison]+ clean_samples[:cleanDataReqLen]
 
-
+# 45500 clean samples before , 
+# poison ratio 80% -- no of poisoned =3600 , clean data req len = 900 
+# clean samples = [44600clean+900 poisoned]
 
 def ssd_tuning(model,
     forget_train_dl,
@@ -129,15 +131,12 @@ def main():
     # Dataset
     poison_ratio=arg.poison_ratio
     clean_data, poison_data = load_dataset(arg)
-    #mix_clean, mix_poison = data_mix(clean_data, poison_data,poison_ratio)
     # Dataset
     # folder_path = os.path.join('./saved/separated_samples', 'poison_rate_'+str(arg.poison_rate), arg.dataset, arg.model, arg.trigger_type+'_'+str(arg.clean_ratio)+'_'+str(arg.poison_ratio))
-    mix_clean=clean_data
-    mix_poison=poison_data
+    #mix_clean=clean_data
+    #mix_poison=poison_data
 
-    clean_data_loader = get_loader(mix_clean)
-    poison_data_loader = get_loader(mix_poison)
-    
+
 
     
     # full_data_tf = Dataset_npy(full_dataset=full_data, transform=tf_compose_unlearning)
@@ -161,20 +160,24 @@ def main():
     criterion = nn.CrossEntropyLoss()
 
     if arg.unlearn_type=='dbr':
+        clean_data_loader, poison_data_loader = get_mixed_data(poison_ratio, clean_data, poison_data)
         dbr_unlearning = DBRUnlearning(model, criterion, arg)
         dbr_unlearning.unlearn(testloader_clean, testloader_bd, poison_data_loader, clean_data_loader)
     elif arg.unlearn_type=='abl':
-        abl_unlearning = ABLUnlearning(model, criterion, isolate_poison_data_loader, isolate_clean_data_loader, arg, arg.device)
+        clean_data_loader, poison_data_loader = get_mixed_data(poison_ratio, clean_data, poison_data)
+        abl_unlearning = ABLUnlearning(model, criterion, poison_data_loader, clean_data_loader, arg, arg.device)
         abl_unlearning.unlearn(arg, testloader_clean, testloader_bd)
     elif arg.unlearn_type=='rnr':
         #trainloader = get_dataloader_train(arg)
+        clean_data_loader, poison_data_loader = get_mixed_data(poison_ratio, clean_data, poison_data)
         model_rnr = get_network(arg)
         model_rnr = torch.nn.DataParallel(model_rnr)
         rnr_learning = RNR(model_rnr, criterion, arg)
         rnr_learning.unlearn(clean_data_loader, testloader_clean, testloader_bd)
     elif arg.unlearn_type=='cfu':
         cf = ContinuousForgetting(arg, criterion)
-        cf.relearn(10, model, isolate_clean_data_loader, testloader_clean, testloader_bd)
+        clean_data_loader, poison_data_loader = get_mixed_data(poison_ratio, clean_data, poison_data)
+        cf.relearn(10, model, clean_data_loader, testloader_clean, testloader_bd)
     elif arg.unlearn_type=='ssd':        
         f_name = arg.log
         csvFile = open(f_name, 'a', newline='')
@@ -188,6 +191,12 @@ def main():
         test_loss_bd, test_acc_bd, test_acc_robust = test_epoch(arg, testloader_bd, model, criterion, 0, 'bd')
         writer.writerow([1, test_acc_cl.item(), test_acc_bd.item()])
         csvFile.close()
+
+def get_mixed_data(poison_ratio, clean_data, poison_data):
+    mix_clean, mix_poison = data_mix(clean_data, poison_data,poison_ratio)
+    clean_data_loader = get_loader(mix_clean)
+    poison_data_loader = get_loader(mix_poison)
+    return clean_data_loader,poison_data_loader
 
 if __name__ == '__main__':
     main()

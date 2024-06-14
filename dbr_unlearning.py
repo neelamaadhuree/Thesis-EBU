@@ -11,7 +11,7 @@ class DBRUnlearning:
     def __init__(self, model, criterion, arg):
         self.model = model
         self.optimizer = torch.optim.SGD(self.model.parameters(), lr=arg.lr, momentum=0.9, weight_decay=5e-4)
-        #self.scheduler = torch.optim.lr_scheduler.MultiStepLR(self.optimizer, milestones=arg.schedule, gamma=arg.gamma)
+        self.scheduler = torch.optim.lr_scheduler.MultiStepLR(self.optimizer, milestones=arg.schedule, gamma=arg.gamma)
         self.criterion = criterion
         self.args = arg
 
@@ -99,13 +99,15 @@ class DBRUnlearning:
 
         for epoch in tqdm(range(start_epoch, arg.epochs)):
             # Modify lr
-            self.learning_rate_unlearning()
+            #self.learning_rate_unlearning()
 
             # Unlearn
             self.train_step_unlearning(isolate_poison_data_loader, epoch)
 
             # Relearn
             self.train_step_relearning(isolate_clean_data_loader, epoch)
+            
+            self.scheduler.step()
 
             test_loss_cl, test_acc_cl, _ = test_epoch(arg, testloader_clean, self.model, self.criterion, epoch, 'clean')
             test_loss_bd, test_acc_bd, test_acc_robust = test_epoch(arg, testloader_bd, self.model, self.criterion, epoch, 'bd')
