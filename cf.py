@@ -52,7 +52,7 @@ class ContinuousForgetting:
                 optimizer.step()
             scheduler.step()
 
-            if idx % self.args.print_freq == 0:
+            if True:
                 print('Epoch[{0}]:[{1:03}/{2:03}] '
                     'loss:{losses.val:.4f}({losses.avg:.4f})  '
                     'prec@1:{top1.val:.2f}({top1.avg:.2f})  '
