@@ -18,7 +18,7 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import pdb
 from typing import Dict, List
-
+import pdb
 ###############################################
 # Clean implementation
 ###############################################
@@ -152,12 +152,12 @@ class ParameterPerturber:
         """
         criterion = nn.CrossEntropyLoss()
         importances = self.zerolike_params_dict(self.model)
-        for batch in dataloader:
-            x, y, _ = batch
-            x, y = x.to(self.device), y.to(self.device)
+        for input, label, isClean in dataloader:
+            breakpoint()
+            input, label = input.to(self.device), label.to(self.device)
             self.opt.zero_grad()
-            out = self.model(x)
-            loss = criterion(out, y)
+            out = self.model(input)
+            loss = criterion(out, label)
             loss.backward()
 
             for (k1, p), (k2, imp) in zip(
