@@ -78,7 +78,8 @@ def ssd_tuning(model,
     dampening_constant,
     selection_weighting,
     full_train_dl,
-    device):
+    device, 
+    args):
     parameters = {
         "lower_bound": 1,  # unused
         "exponent": 1,  # unused
@@ -97,10 +98,10 @@ def ssd_tuning(model,
     model = model.eval()
 
     # Calculation of the forget set importances
-    sample_importances = pdr.calc_importance(forget_train_dl)
+    sample_importances = pdr.calc_importance(args, forget_train_dl)
 
     # Calculate the importances of D (see paper); this can also be done at any point before forgetting.
-    original_importances = pdr.calc_importance(full_train_dl)
+    original_importances = pdr.calc_importance(args, full_train_dl)
 
     # Dampen selected parameters
     pdr.modify_weight(original_importances, sample_importances)
@@ -187,7 +188,7 @@ def main():
         test_loss_cl, test_acc_cl, _ = test_epoch(arg, testloader_clean, model, criterion, 0, 'clean')
         test_loss_bd, test_acc_bd, test_acc_robust = test_epoch(arg, testloader_bd, model, criterion, 0, 'bd')
         writer.writerow([-1, test_acc_cl.item(), test_acc_bd.item()])
-        model=ssd_tuning(model,poison_data_loader,1,10,full_data_loader, arg.device)
+        model=ssd_tuning(model,poison_data_loader,1,10,full_data_loader, arg.device, arg)
         test_loss_cl, test_acc_cl, _ = test_epoch(arg, testloader_clean, model, criterion, 0, 'clean')
         test_loss_bd, test_acc_bd, test_acc_robust = test_epoch(arg, testloader_bd, model, criterion, 0, 'bd')
         writer.writerow([1, test_acc_cl.item(), test_acc_bd.item()])

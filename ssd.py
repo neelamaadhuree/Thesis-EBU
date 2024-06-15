@@ -19,6 +19,8 @@ import matplotlib.pyplot as plt
 import pdb
 from typing import Dict, List
 import pdb
+from utils.utils import accuracy, normalization, AverageMeter
+
 ###############################################
 # Clean implementation
 ###############################################
@@ -140,7 +142,7 @@ class ParameterPerturber:
 
         return [Subset(dataset, subset_idxs[idx]) for idx in range(n_classes)]
 
-    def calc_importance(self, dataloader: DataLoader) -> Dict[str, torch.Tensor]:
+    def calc_importance(self, args, dataloader: DataLoader) -> Dict[str, torch.Tensor]:
         """
         Adapated from: Avalanche: an End-to-End Library for Continual Learning - https://github.com/ContinualAI/avalanche
         Calculate per-parameter, importance
@@ -153,8 +155,8 @@ class ParameterPerturber:
         criterion = nn.CrossEntropyLoss()
         importances = self.zerolike_params_dict(self.model)
         for input, label, isClean in dataloader:
-            breakpoint()
             input, label = input.to(self.device), label.to(self.device)
+            inputs = normalization(args, inputs)  # Assuming 'inputs' is already correctly shaped
             self.opt.zero_grad()
             out = self.model(input)
             loss = criterion(out, label)
