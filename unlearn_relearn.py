@@ -160,25 +160,26 @@ def main():
     criterion = nn.CrossEntropyLoss()
 
     if arg.unlearn_type=='dbr':
-        clean_data_loader, poison_data_loader = get_mixed_data(poison_ratio, clean_data, poison_data)
+        clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data, poison_data)
         dbr_unlearning = DBRUnlearning(model, criterion, arg)
         dbr_unlearning.unlearn(testloader_clean, testloader_bd, poison_data_loader, clean_data_loader)
     elif arg.unlearn_type=='abl':
-        clean_data_loader, poison_data_loader = get_mixed_data(poison_ratio, clean_data, poison_data)
+        clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data, poison_data)
         abl_unlearning = ABLUnlearning(model, criterion, poison_data_loader, clean_data_loader, arg, arg.device)
         abl_unlearning.unlearn(arg, testloader_clean, testloader_bd)
     elif arg.unlearn_type=='rnr':
         #trainloader = get_dataloader_train(arg)
-        clean_data_loader, poison_data_loader = get_mixed_data(poison_ratio, clean_data, poison_data)
+        clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data, poison_data)
         model_rnr = get_network(arg)
         model_rnr = torch.nn.DataParallel(model_rnr)
         rnr_learning = RNR(model_rnr, criterion, arg)
         rnr_learning.unlearn(clean_data_loader, testloader_clean, testloader_bd)
     elif arg.unlearn_type=='cfu':
         cf = ContinuousForgetting(arg, criterion)
-        clean_data_loader, poison_data_loader = get_mixed_data(poison_ratio, clean_data, poison_data)
-        cf.relearn(10, model, clean_data_loader, testloader_clean, testloader_bd)
+        clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data, poison_data)
+        cf.relearn(30, model, clean_data_loader, testloader_clean, testloader_bd)
     elif arg.unlearn_type=='ssd':        
+        clean_data_loader, poison_data_loader,full_data_loader = get_mixed_data(poison_ratio, clean_data, poison_data)
         f_name = arg.log
         csvFile = open(f_name, 'a', newline='')
         writer = csv.writer(csvFile)
@@ -186,7 +187,7 @@ def main():
         test_loss_cl, test_acc_cl, _ = test_epoch(arg, testloader_clean, model, criterion, 0, 'clean')
         test_loss_bd, test_acc_bd, test_acc_robust = test_epoch(arg, testloader_bd, model, criterion, 0, 'bd')
         writer.writerow([-1, test_acc_cl.item(), test_acc_bd.item()])
-        model=ssd_tuning(model,isolate_poison_data_loader,1,10,full_data_loader, arg.device)
+        model=ssd_tuning(model,poison_data_loader,1,10,full_data_loader, arg.device)
         test_loss_cl, test_acc_cl, _ = test_epoch(arg, testloader_clean, model, criterion, 0, 'clean')
         test_loss_bd, test_acc_bd, test_acc_robust = test_epoch(arg, testloader_bd, model, criterion, 0, 'bd')
         writer.writerow([1, test_acc_cl.item(), test_acc_bd.item()])
@@ -196,7 +197,8 @@ def get_mixed_data(poison_ratio, clean_data, poison_data):
     mix_clean, mix_poison = data_mix(clean_data, poison_data,poison_ratio)
     clean_data_loader = get_loader(mix_clean)
     poison_data_loader = get_loader(mix_poison)
-    return clean_data_loader,poison_data_loader
+    full_data_loader=get_loader(clean_data+poison_data)
+    return clean_data_loader,poison_data_loader, full_data_loader
 
 if __name__ == '__main__':
     main()
