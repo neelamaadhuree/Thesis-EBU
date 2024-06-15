@@ -156,7 +156,7 @@ class ParameterPerturber:
         importances = self.zerolike_params_dict(self.model)
         for input, label, isClean in dataloader:
             input, label = input.to(self.device), label.to(self.device)
-            inputs = normalization(args, inputs)  # Assuming 'inputs' is already correctly shaped
+            input = normalization(args, input)  # Assuming 'inputs' is already correctly shaped
             self.opt.zero_grad()
             out = self.model(input)
             loss = criterion(out, label)
