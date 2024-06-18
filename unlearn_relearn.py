@@ -180,7 +180,10 @@ def main():
         clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data, poison_data)
         cf.relearn(30, model, clean_data_loader, testloader_clean, testloader_bd)
     elif arg.unlearn_type=='ssd':        
-        clean_data_loader, poison_data_loader,full_data_loader = get_mixed_data(poison_ratio, clean_data, poison_data)
+
+        clean_data_loader = get_loader(clean_data)
+        poison_data_loader = get_loader(poison_data)
+        # clean_data_loader, poison_data_loader,full_data_loader = get_mixed_data(poison_ratio, clean_data, poison_data)
         f_name = arg.log
         csvFile = open(f_name, 'a', newline='')
         writer = csv.writer(csvFile)
@@ -188,7 +191,7 @@ def main():
         test_loss_cl, test_acc_cl, _ = test_epoch(arg, testloader_clean, model, criterion, 0, 'clean')
         test_loss_bd, test_acc_bd, test_acc_robust = test_epoch(arg, testloader_bd, model, criterion, 0, 'bd')
         writer.writerow([-1, test_acc_cl.item(), test_acc_bd.item()])
-        model=ssd_tuning(model,poison_data_loader,1,10,full_data_loader, arg.device, arg)
+        model=ssd_tuning(model,poison_data_loader,1,10,clean_data_loader, arg.device, arg)
         test_loss_cl, test_acc_cl, _ = test_epoch(arg, testloader_clean, model, criterion, 0, 'clean')
         test_loss_bd, test_acc_bd, test_acc_robust = test_epoch(arg, testloader_bd, model, criterion, 0, 'bd')
         writer.writerow([1, test_acc_cl.item(), test_acc_bd.item()])
