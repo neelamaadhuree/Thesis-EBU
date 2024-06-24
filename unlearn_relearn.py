@@ -17,6 +17,7 @@ import ssd as ssd
 from abl_unlearning import ABLUnlearning 
 from dbr_unlearning import DBRUnlearning 
 from cf import ContinuousForgetting 
+from cfn_unlearning import CFNUnlearning
 
 
 from RNR_update import RNR
@@ -181,9 +182,9 @@ def main():
         cf.relearn(30, model, clean_data_loader, testloader_clean, testloader_bd)
     elif arg.unlearn_type=='ssd':        
 
-        clean_data_loader = get_loader(clean_data)
-        poison_data_loader = get_loader(poison_data)
-        # clean_data_loader, poison_data_loader,full_data_loader = get_mixed_data(poison_ratio, clean_data, poison_data)
+        #clean_data_loader = get_loader(clean_data)
+        #poison_data_loader = get_loader(poison_data)
+        clean_data_loader, poison_data_loader,full_data_loader = get_mixed_data(poison_ratio, clean_data, poison_data)
         f_name = arg.log
         csvFile = open(f_name, 'a', newline='')
         writer = csv.writer(csvFile)
@@ -191,11 +192,16 @@ def main():
         test_loss_cl, test_acc_cl, _ = test_epoch(arg, testloader_clean, model, criterion, 0, 'clean')
         test_loss_bd, test_acc_bd, test_acc_robust = test_epoch(arg, testloader_bd, model, criterion, 0, 'bd')
         writer.writerow([-1, test_acc_cl.item(), test_acc_bd.item()])
-        model=ssd_tuning(model,poison_data_loader,1,10,clean_data_loader, arg.device, arg)
+        model=ssd_tuning(model,poison_data_loader,1.0,45,clean_data_loader, arg.device, arg)
         test_loss_cl, test_acc_cl, _ = test_epoch(arg, testloader_clean, model, criterion, 0, 'clean')
         test_loss_bd, test_acc_bd, test_acc_robust = test_epoch(arg, testloader_bd, model, criterion, 0, 'bd')
         writer.writerow([1, test_acc_cl.item(), test_acc_bd.item()])
         csvFile.close()
+    elif arg.unlearn_type=='cfn':
+        clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data, poison_data)
+        cfn_unlearning = CFNUnlearning(model, criterion, arg)
+        cfn_unlearning.unlearn(testloader_clean, testloader_bd, clean_data_loader)
+
 
 def get_mixed_data(poison_ratio, clean_data, poison_data):
     mix_clean, mix_poison = data_mix(clean_data, poison_data,poison_ratio)
