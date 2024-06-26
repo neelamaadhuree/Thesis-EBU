@@ -162,6 +162,8 @@ def main():
     model.load_state_dict(checkpoint['model'])
     criterion = nn.CrossEntropyLoss()
 
+    f_name = arg.log
+
     if arg.unlearn_type=='dbr':
         clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data, poison_data)
         dbr_unlearning = DBRUnlearning(model, criterion, arg)
@@ -186,26 +188,31 @@ def main():
         #clean_data_loader = get_loader(clean_data)
         #poison_data_loader = get_loader(poison_data)
         clean_data_loader, poison_data_loader,full_data_loader = get_mixed_data(poison_ratio, clean_data, poison_data)
-        f_name = arg.log
         csvFile = open(f_name, 'a', newline='')
         writer = csv.writer(csvFile)
-        writer.writerow(['Epoch', 'Test_ACC', 'Test_ASR'])
-        test_loss_cl, test_acc_cl, _ = test_epoch(arg, testloader_clean, model, criterion, 0, 'clean')
-        test_loss_bd, test_acc_bd, test_acc_robust = test_epoch(arg, testloader_bd, model, criterion, 0, 'bd')
-        writer.writerow([-1, test_acc_cl.item(), test_acc_bd.item()])
+        runTest(testloader_clean, testloader_bd, model, criterion, writer)
         model=ssd_tuning(model,poison_data_loader,1.0,45,clean_data_loader, arg.device, arg)
-        test_loss_cl, test_acc_cl, _ = test_epoch(arg, testloader_clean, model, criterion, 0, 'clean')
-        test_loss_bd, test_acc_bd, test_acc_robust = test_epoch(arg, testloader_bd, model, criterion, 0, 'bd')
-        writer.writerow([1, test_acc_cl.item(), test_acc_bd.item()])
+        runTest(testloader_clean, testloader_bd, model, criterion, writer)
         csvFile.close()
     elif arg.unlearn_type=='cfn':
         clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data[:20000], poison_data)
         cfn_unlearning = CFNUnlearning(model, criterion, arg)
         cfn_unlearning.unlearn(testloader_clean, testloader_bd, clean_data_loader)
     elif arg.unlearn_type=='ibau':
+        csvFile = open(f_name, 'a', newline='')
+        writer = csv.writer(csvFile)
+        runTest(testloader_clean, testloader_bd, model, criterion, writer)
         clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data[:1000], poison_data)
-        ibau_unlearning = IBAUUnlearning(model, criterion, arg)
-        ibau_unlearning.unlearn(testloader_clean, testloader_bd, clean_data_loader)        
+        ibau_unlearning = IBAUUnlearning(model, arg)
+        ibau_unlearning.unlearn(testloader_clean, testloader_bd) 
+        runTest(testloader_clean, testloader_bd, model, criterion, writer)
+        csvFile.close()
+
+def runTest(testloader_clean, testloader_bd, model, criterion, writer):
+    writer.writerow(['Epoch', 'Test_ACC', 'Test_ASR'])
+    test_loss_cl, test_acc_cl, _ = test_epoch(arg, testloader_clean, model, criterion, 0, 'clean')
+    test_loss_bd, test_acc_bd, test_acc_robust = test_epoch(arg, testloader_bd, model, criterion, 0, 'bd')
+    writer.writerow([-1, test_acc_cl.item(), test_acc_bd.item()])
 
 
 def get_mixed_data(poison_ratio, clean_data, poison_data):
