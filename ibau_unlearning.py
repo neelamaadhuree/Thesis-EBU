@@ -30,7 +30,7 @@ class IBAUUnlearning:
           
         testds = testloader.dataset
         x_data_first_5000 = torch.stack([testds[i][0] for i in range(5000)])
-        y_data_first_5000 = torch.stack([testds[i][1] for i in range(5000)])
+        y_data_first_5000 = torch.tensor([testds[i][1] for i in range(5000)], dtype=torch.long)
         test_set = TensorDataset(x_data_first_5000, y_data_first_5000)
 
 
