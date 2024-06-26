@@ -21,7 +21,8 @@ class IBAUUnlearning:
     def unlearn(self, test_set, unlloader):
         args = self.args
         images_list, labels_list = [], []
-        for index, (images, labels) in enumerate(unlloader):
+
+        for index, (images, labels, gt_labeld, isCleans) in enumerate(unlloader):
             images_list.append(images)
             labels_list.append(labels)
           
@@ -58,7 +59,7 @@ class IBAUUnlearning:
             batch_pert = torch.zeros_like(test_set.tensors[0][:1], requires_grad=True, device='cuda')
             batch_opt = torch.optim.SGD(params=[batch_pert], lr=10)
         
-            for images, labels in unlloader:
+            for index, (images, labels, gt_labeld, isCleans) in enumerate(unlloader):
                 images = images.to(args.device)
                 ori_lab = torch.argmax(self.model.forward(images),axis = 1).long()
         #         per_logits = model.forward(torch.clamp(images+batch_pert,min=0,max=1))
