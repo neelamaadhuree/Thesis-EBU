@@ -28,9 +28,9 @@ class IBAUUnlearning:
             images_list.append(images)
             labels_list.append(labels)
           
-        set = testloader.dataset
-        x_data_first_5000 = set[:5000][0]
-        y_data_first_5000 = set[:5000][1]
+        testds = testloader.dataset
+        x_data_first_5000 = torch.stack([testds[i][0] for i in range(5000)])
+        y_data_first_5000 = torch.stack([testds[i][1] for i in range(5000)])
         test_set = TensorDataset(x_data_first_5000, y_data_first_5000)
 
 
@@ -66,7 +66,7 @@ class IBAUUnlearning:
             batch_pert = torch.zeros_like(test_set.tensors[0][:1], requires_grad=True, device='cuda')
             batch_opt = torch.optim.SGD(params=[batch_pert], lr=10)
         
-            for index, (images, labels, gt_labeld, isCleans) in enumerate(unlloader):
+            for index, (images, labels, gt_labeld, isCleans) in enumerate(testloader):
                 images = images.to(args.device)
                 ori_lab = torch.argmax(self.model.forward(images),axis = 1).long()
         #         per_logits = model.forward(torch.clamp(images+batch_pert,min=0,max=1))
