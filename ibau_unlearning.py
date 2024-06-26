@@ -3,6 +3,7 @@ from tqdm import tqdm
 import csv
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.utils.data import TensorDataset
 import numpy as np
 import random
 import hypergrad as hg
@@ -18,14 +19,20 @@ class IBAUUnlearning:
     ### define the inner loss L2
 
 
-    def unlearn(self, test_set, unlloader):
+    def unlearn(self, testloader):
         args = self.args
         images_list, labels_list = [], []
 
-        for index, (images, labels, gt_labeld, isCleans) in enumerate(unlloader):
+
+        for index, (images, labels, gt_labeld, isCleans) in enumerate(testloader):
             images_list.append(images)
             labels_list.append(labels)
           
+        set = testloader.dataset
+        x_data_first_5000 = set[:5000][0]
+        y_data_first_5000 = set[:5000][1]
+        test_set = TensorDataset(x_data_first_5000, y_data_first_5000)
+
 
         def loss_inner(perturb, model_params):
             images = images_list[0].to(args.device)
