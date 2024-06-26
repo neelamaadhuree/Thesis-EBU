@@ -18,6 +18,7 @@ from abl_unlearning import ABLUnlearning
 from dbr_unlearning import DBRUnlearning 
 from cf import ContinuousForgetting 
 from cfn_unlearning import CFNUnlearning
+from ibau_unlearning import IBAUUnlearning
 
 
 from RNR_update import RNR
@@ -198,9 +199,13 @@ def main():
         writer.writerow([1, test_acc_cl.item(), test_acc_bd.item()])
         csvFile.close()
     elif arg.unlearn_type=='cfn':
-        clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data, poison_data)
+        clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data[:20000], poison_data)
         cfn_unlearning = CFNUnlearning(model, criterion, arg)
         cfn_unlearning.unlearn(testloader_clean, testloader_bd, clean_data_loader)
+    elif arg.unlearn_type=='ibau':
+        clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data[:1000], poison_data)
+        ibau_unlearning = IBAUUnlearning(model, criterion, arg)
+        ibau_unlearning.unlearn(testloader_clean, testloader_bd, clean_data_loader)        
 
 
 def get_mixed_data(poison_ratio, clean_data, poison_data):
