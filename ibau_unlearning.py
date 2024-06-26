@@ -9,10 +9,11 @@ import random
 import hypergrad as hg
 
 class IBAUUnlearning:
-    def __init__(self, model, arg, epochs=10, lr=0.01):
+    def __init__(self, model, arg, epochs=10, lr=0.01, K = 5):
         self.model = model
         self.epochs = epochs
         self.args = arg
+        self.K = K
         self.outer_opt = torch.optim.SGD(model.parameters(), lr=arg.lr)
 
 
@@ -84,5 +85,5 @@ class IBAUUnlearning:
             #unlearn step         
             for batchnum in range(len(images_list)): 
                 self.outer_opt.zero_grad()
-                hg.fixed_point(pert, list(self.model.parameters()), args.K, inner_opt, loss_outer) 
+                hg.fixed_point(pert, list(self.model.parameters()), self.K, inner_opt, loss_outer) 
                 self.outer_opt.step()
