@@ -64,6 +64,7 @@ class IBAUUnlearning:
             return loss
 
         for round in range(self.epochs):
+            print("Running" + str(round))
             batch_pert = torch.zeros_like(test_set.tensors[0][:1], requires_grad=True, device='cuda')
             batch_opt = torch.optim.SGD(params=[batch_pert], lr=10)
         
@@ -87,3 +88,6 @@ class IBAUUnlearning:
                 self.outer_opt.zero_grad()
                 hg.fixed_point(pert, list(self.model.parameters()), self.K, inner_opt, loss_outer) 
                 self.outer_opt.step()
+
+            print("Done" + str(round))
+
