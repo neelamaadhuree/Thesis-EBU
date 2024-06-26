@@ -204,7 +204,7 @@ def main():
         runTest(testloader_clean, testloader_bd, model, criterion, writer)
         clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data[:1000], poison_data)
         ibau_unlearning = IBAUUnlearning(model, arg)
-        ibau_unlearning.unlearn(testloader_clean, testloader_bd) 
+        ibau_unlearning.unlearn(testloader_clean) 
         runTest(testloader_clean, testloader_bd, model, criterion, writer)
         csvFile.close()
 
