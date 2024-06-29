@@ -219,15 +219,17 @@ def main():
         anpMask = ANPMask(arg)
 
         anpMask.load_state_dict(model, orig_state_dict=checkpoint)
-        print("Starting Pruning...")
+        print("Starting Masking...")
 
         anpMask.set_model(model)
         anpMask.mask(clean_data_loader, testloader_clean , testloader_bd)
 
-        model = getattr(models, 'resnet18_anp')(num_classes=10, norm_layer=models.NoisyBatchNorm2d)
+        model = get_network(arg)
+        model = torch.nn.DataParallel(model)
         checkpoint = torch.load(arg.checkpoint_load)
-        print("Starting Pruning...")
+        print("Staring pruning...")
         model.load_state_dict(checkpoint['model'])
+        model = model.to(arg.device)
         criterion = nn.CrossEntropyLoss()
         anpPruning = ANPPruning(arg, model=model)
         anpPruning.prune(clean_data_loader, testloader_clean , testloader_bd)
