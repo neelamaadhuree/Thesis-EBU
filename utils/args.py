@@ -54,7 +54,7 @@ def get_args():
     parser.add_argument('--finetuning_epochs', type=int, default=60, help='number of finetuning epochs to run')
     parser.add_argument('--clip', type=float, default=10.0, metavar='M', help='Gradient clipping (default: 10)')
 
-    parser.add_argument('--anp-output-dir', type=str, default='./logs/anp/models/')
+    parser.add_argument('--anp-output-dir', type=str, default='./saved/anp/')
     parser.add_argument('--nb-iter', type=int, default=2000, help='the number of iterations for training')
     parser.add_argument('--anp-eps', type=float, default=0.4)
     parser.add_argument('--anp-steps', type=int, default=1)

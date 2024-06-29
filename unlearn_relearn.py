@@ -213,6 +213,9 @@ def main():
         runTest(testloader_clean, testloader_bd, model, criterion, writer)
         csvFile.close()
     elif arg.unlearn_type == 'anp':
+        csvFile = open(f_name, 'a', newline='')
+        writer = csv.writer(csvFile)
+        runTest(testloader_clean, testloader_bd, model, criterion, writer)
         clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data[:1000], poison_data)
         model = getattr(models, 'resnet18_anp')(num_classes=10, norm_layer=models.NoisyBatchNorm2d)
         checkpoint = torch.load(arg.checkpoint_load)
@@ -232,7 +235,8 @@ def main():
         model = model.to(arg.device)
         criterion = nn.CrossEntropyLoss()
         anpPruning = ANPPruning(arg, model=model)
-        anpPruning.prune(clean_data_loader, testloader_clean , testloader_bd)
+        anpPruning.prune(testloader_clean , testloader_bd)
+        runTest(testloader_clean, testloader_bd, model, criterion, writer)
 
         
 
