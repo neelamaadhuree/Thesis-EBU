@@ -21,6 +21,7 @@ from cfn_unlearning import CFNUnlearning
 from ibau_unlearning import IBAUUnlearning
 from ANP_pruning import ANPPruning
 from ANP_mask import ANPMask
+import models
 
 
 
@@ -216,8 +217,7 @@ def main():
         anpMask = ANPMask(arg, model=model)
         anpMask.mask(clean_data_loader, testloader_clean , testloader_bd)
 
-        model = get_network(arg)
-        model = torch.nn.DataParallel(model)
+        model = getattr(models, 'resnet18_anp')(num_classes=10, norm_layer=models.NoisyBatchNorm2d)
         checkpoint = torch.load(arg.checkpoint_load)
         print("Starting Pruning...")
         model.load_state_dict(checkpoint['model'])
