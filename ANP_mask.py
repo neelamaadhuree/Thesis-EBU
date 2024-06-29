@@ -9,11 +9,12 @@ import models
 
 class ANPMask:
 
-    def __init__(self, args,  model):
-        self.model = model
+    def __init__(self, args):
         self.device = args.device
         self.args = args
 
+    def set_model(self, model):
+        self.model = model
 
     def mask(self, clean_val_loader, clean_test_loader, poison_test_loader):
         net = self.model
