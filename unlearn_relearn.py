@@ -214,6 +214,11 @@ def main():
         csvFile.close()
     elif arg.unlearn_type == 'anp':
         clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data[:1000], poison_data)
+        model = getattr(models, 'resnet18_anp')(num_classes=10, norm_layer=models.NoisyBatchNorm2d)
+        checkpoint = torch.load(arg.checkpoint_load)
+        print("Starting Pruning...")
+        model.load_state_dict(checkpoint['model'])
+
         anpMask = ANPMask(arg, model=model)
         anpMask.mask(clean_data_loader, testloader_clean , testloader_bd)
 
