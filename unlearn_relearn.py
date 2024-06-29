@@ -212,6 +212,7 @@ def main():
         runTest(testloader_clean, testloader_bd, model, criterion, writer)
         csvFile.close()
     elif arg.unlearn_type == 'anp':
+        clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data[:1000], poison_data)
         anpMask = ANPMask(arg, model=model)
         anpMask.mask(clean_data_loader, testloader_clean , testloader_bd)
 

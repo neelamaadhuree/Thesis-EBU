@@ -18,7 +18,7 @@ class ANPPruning:
         criterion = torch.nn.CrossEntropyLoss().to(self.device)
 
         # Step 3: pruning
-        mask_values = self.read_data(args.mask_file)
+        mask_values = self.read_data(os.path.join(args.anp_output_dir, 'mask_values.txt'))
         mask_values = sorted(mask_values, key=lambda x: float(x[2]))
         print('No. \t Layer Name \t Neuron Idx \t Mask \t PoisonLoss \t PoisonACC \t CleanLoss \t CleanACC')
         cl_loss, cl_acc = self.test(model=net, criterion=criterion, data_loader=clean_test_loader)
