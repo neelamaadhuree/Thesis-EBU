@@ -14,7 +14,8 @@ class ANPMask:
         self.args = args
 
     def set_model(self, model):
-        self.model = model
+        self.model = model.to(self.device)
+    
 
     def mask(self, clean_val_loader, clean_test_loader, poison_test_loader):
         net = self.model
