@@ -54,6 +54,17 @@ def get_args():
     parser.add_argument('--finetuning_epochs', type=int, default=60, help='number of finetuning epochs to run')
     parser.add_argument('--clip', type=float, default=10.0, metavar='M', help='Gradient clipping (default: 10)')
 
+    parser.add_argument('--anp-output-dir', type=str, default='logs/anp/models/')
+    parser.add_argument('--nb-iter', type=int, default=2000, help='the number of iterations for training')
+    parser.add_argument('--anp-eps', type=float, default=0.4)
+    parser.add_argument('--anp-steps', type=int, default=1)
+    parser.add_argument('--anp-alpha', type=float, default=0.2)
+    parser.add_argument('--print-every', type=int, default=500, help='print results every few iterations')
+    parser.add_argument('--pruning-by', type=str, default='threshold', choices=['number', 'threshold'])
+    parser.add_argument('--pruning-max', type=float, default=0.90, help='the maximum number/threshold for pruning')
+    parser.add_argument('--pruning-step', type=float, default=0.05, help='the step size for evaluating the pruning')
+
+
     arg = parser.parse_args()
     # CF 
     

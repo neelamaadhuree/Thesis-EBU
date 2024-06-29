@@ -19,6 +19,10 @@ from dbr_unlearning import DBRUnlearning
 from cf import ContinuousForgetting 
 from cfn_unlearning import CFNUnlearning
 from ibau_unlearning import IBAUUnlearning
+from ANP_pruning import ANPPruning
+from ANP_mask import ANPMask
+
+
 
 
 from RNR_update import RNR
@@ -207,6 +211,20 @@ def main():
         ibau_unlearning.unlearn(testloader_clean) 
         runTest(testloader_clean, testloader_bd, model, criterion, writer)
         csvFile.close()
+    elif arg.unlearn_type == 'anp':
+        anpMask = ANPMask(arg, model=model)
+        anpMask.mask(clean_data_loader, testloader_clean , testloader_bd)
+
+        model = get_network(arg)
+        model = torch.nn.DataParallel(model)
+        checkpoint = torch.load(arg.checkpoint_load)
+        print("Starting Pruning...")
+        model.load_state_dict(checkpoint['model'])
+        criterion = nn.CrossEntropyLoss()
+        anpPruning = ANPPruning(arg, model=model)
+        anpPruning.prune(clean_data_loader, testloader_clean , testloader_bd)
+
+        
 
 def runTest(testloader_clean, testloader_bd, model, criterion, writer):
     writer.writerow(['Epoch', 'Test_ACC', 'Test_ASR'])
