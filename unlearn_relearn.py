@@ -34,7 +34,7 @@ from random import shuffle
 from utils import args
 from utils.network import get_network
 from utils.dataloader_bd import get_dataloader_train, get_dataloader_test, Dataset_npy
-from test_model import test_epoch
+from test_model import test_epoch, test_epoch_nad
 from models.resnet_cifar10_nad import resnet18_nad
 
 
@@ -246,24 +246,24 @@ def main():
         teacher_model = getResnetNadModel(arg)
         csvFile = open(f_name, 'a', newline='')
         writer = csv.writer(csvFile)
-        runTest(testloader_clean, testloader_bd, model, criterion, writer)
+        runTestNad(testloader_clean, testloader_bd, model, criterion, writer)
 
         tft = TeacherFineTuning(teacher_model, arg)
         fineTunedModel = tft.fineTune( testloader_clean, testloader_bd, clean_data_loader)
 
-        runTest(testloader_clean, testloader_bd, model, criterion, writer)
+        runTestNad(testloader_clean, testloader_bd, model, criterion, writer)
         print("Teacher Fine Tuning Complete")
 
         print("Student Model Test")
 
         student_model = getResnetNadModel(arg)
 
-        runTest(testloader_clean, testloader_bd, student_model, criterion, writer)
+        runTestNad(testloader_clean, testloader_bd, student_model, criterion, writer)
 
         nad = NAD(arg, fineTunedModel, student_model)
         nad.train(clean_data_loader)
         print("Student Fine Tuning Complete")
-        runTest(testloader_clean, testloader_bd, student_model, criterion, writer)
+        runTestNad(testloader_clean, testloader_bd, student_model, criterion, writer)
         csvFile.close()
 
 
@@ -283,6 +283,13 @@ def runTest(testloader_clean, testloader_bd, model, criterion, writer):
     test_loss_cl, test_acc_cl, _ = test_epoch(arg, testloader_clean, model, criterion, 0, 'clean')
     test_loss_bd, test_acc_bd, test_acc_robust = test_epoch(arg, testloader_bd, model, criterion, 0, 'bd')
     writer.writerow([-1, test_acc_cl.item(), test_acc_bd.item()])
+
+def runTestNad(testloader_clean, testloader_bd, model, criterion, writer):
+    writer.writerow(['Epoch', 'Test_ACC', 'Test_ASR'])
+    test_loss_cl, test_acc_cl, _ = test_epoch_nad(arg, testloader_clean, model, criterion, 0, 'clean')
+    test_loss_bd, test_acc_bd, test_acc_robust = test_epoch_nad(arg, testloader_bd, model, criterion, 0, 'bd')
+    writer.writerow([-1, test_acc_cl.item(), test_acc_bd.item()])
+
 
 
 def get_mixed_data(poison_ratio, clean_data, poison_data):
