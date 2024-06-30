@@ -67,6 +67,8 @@ def get_args():
     parser.add_argument('--nad-beta1', type=int, default=500, help='beta of low layer')
     parser.add_argument('--nad-beta2', type=int, default=1000, help='beta of middle layer')
     parser.add_argument('--nad-beta3', type=int, default=1000, help='beta of high layer')
+    parser.add_argument('--nad-beta4', type=int, default=1000, help='beta of high layer')
+
 
     parser.add_argument('--nad-momentum', type=float, default=0.9, help='momentum')
     parser.add_argument('--nad-weight_decay', type=float, default=1e-4, help='weight decay')
