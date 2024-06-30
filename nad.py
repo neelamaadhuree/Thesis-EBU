@@ -2,8 +2,7 @@ from torch import nn
 import torch
 from at import AT
 import pandas as pd
-from utils.utils import accuracy, AverageMeter
-
+from utils.utils import accuracy, AverageMeter, normalization
 
 
 class NAD:
@@ -32,6 +31,7 @@ class NAD:
                 img = img.cuda()
                 target = target.cuda()
 
+            img = normalization(self.args, img)
             activation1_s, activation2_s, activation3_s, output_s = snet(img)
             activation1_t, activation2_t, activation3_t, _ = tnet(img)
 
