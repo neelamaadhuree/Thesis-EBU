@@ -166,7 +166,7 @@ class NAD:
             criterionAT = AT(self.args.nad_p)
 
         print('----------- Train Initialization --------------')
-        for epoch in range(0, self.args.epochs):
+        for epoch in range(0, self.args.student_epochs):
 
             self.adjust_learning_rate(optimizer, epoch, self.args.lr)
             criterions = {'criterionCls': criterionCls, 'criterionAT': criterionAT}

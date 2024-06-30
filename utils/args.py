@@ -73,6 +73,8 @@ def get_args():
     parser.add_argument('--nad-momentum', type=float, default=0.9, help='momentum')
     parser.add_argument('--nad-weight_decay', type=float, default=1e-4, help='weight decay')
     parser.add_argument('--nad-p', type=float, default=2.0, help='power for AT')
+    parser.add_argument('--student-epochs', type=int, default=30)
+
 
 
 
