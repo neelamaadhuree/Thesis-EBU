@@ -21,6 +21,8 @@ from cfn_unlearning import CFNUnlearning
 from ibau_unlearning import IBAUUnlearning
 from ANP_pruning import ANPPruning
 from ANP_mask import ANPMask
+from nad import NAD
+from teacher_finetuning import TeacherFineTuning
 import models
 
 
@@ -236,6 +238,42 @@ def main():
         anpPruning = ANPPruning(arg, model=model)
         anpPruning.prune(testloader_clean , testloader_bd)
         runTest(testloader_clean, testloader_bd, model, criterion, writer)
+    elif arg.unlearn_type == 'nad':
+
+
+        teacher_model = getModel(arg)
+
+        csvFile = open(f_name, 'a', newline='')
+        writer = csv.writer(csvFile)
+        runTest(testloader_clean, testloader_bd, model, criterion, writer)
+
+        tft = TeacherFineTuning(teacher_model, arg)
+        fineTunedModel = tft.fineTune( testloader_clean, testloader_bd, clean_data_loader)
+
+        runTest(testloader_clean, testloader_bd, model, criterion, writer)
+        print("Teacher Fine Tuning Complete")
+
+        print("Student Model Test")
+
+        student_model = getModel(arg)
+
+        runTest(testloader_clean, testloader_bd, student_model, criterion, writer)
+
+        nad = NAD(arg, fineTunedModel, student_model)
+        nad.train(clean_data_loader)
+        print("Student Fine Tuning Complete")
+        runTest(testloader_clean, testloader_bd, student_model, criterion, writer)
+        csvFile.close()
+
+
+
+
+def getModel(arg):
+    model = get_network(arg)
+    model = torch.nn.DataParallel(model)
+    checkpoint = torch.load(arg.checkpoint_load)
+    model.load_state_dict(checkpoint['model'])
+    return model
 
         
 
