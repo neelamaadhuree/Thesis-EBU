@@ -257,11 +257,12 @@ class ResNet(nn.Module):
         activation3 = x
         x = self.layer4(x)
 
+        activation4 = x
         x = self.avgpool(x)
         x = x.reshape(x.size(0), -1)
         x = self.fc(x)
 
-        return activation1, activation2, activation3, x
+        return activation1, activation2, activation3, activation4, x
 
 
 def _resnet(arch, block, layers, pretrained, progress, device, **kwargs):

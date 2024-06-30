@@ -40,7 +40,7 @@ def test_epoch_nad(arg, testloader, model, criterion, epoch, word):
     for i, (inputs, labels, gt_labels, isCleans) in enumerate(testloader):
         inputs = normalization(arg, inputs)  # Normalize
         inputs, labels, gt_labels = inputs.to(arg.device), labels.to(arg.device), gt_labels.to(arg.device)
-        activation1_s, activation2_s, activation3_s, outputs = model(inputs)
+        activation1_s, activation2_s, activation3_s, activation4_s, outputs = model(inputs)
         loss = criterion(outputs, labels)
 
         test_loss += loss.item()

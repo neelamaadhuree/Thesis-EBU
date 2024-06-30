@@ -32,14 +32,15 @@ class NAD:
                 target = target.cuda()
 
             img = normalization(self.args, img)
-            activation1_s, activation2_s, activation3_s, output_s = snet(img)
-            activation1_t, activation2_t, activation3_t, _ = tnet(img)
+            activation1_s, activation2_s, activation3_s, activation4_s, output_s = snet(img)
+            activation1_t, activation2_t, activation3_t, activation4_t, _ = tnet(img)
 
             cls_loss = criterionCls(output_s, target)
+            at4_loss = criterionAT(activation4_s, activation4_t.detach()) * self.args.nad_beta4
             at3_loss = criterionAT(activation3_s, activation3_t.detach()) * self.args.nad_beta3
             at2_loss = criterionAT(activation2_s, activation2_t.detach()) * self.args.nad_beta2
             at1_loss = criterionAT(activation1_s, activation1_t.detach()) * self.args.nad_beta1
-            at_loss = at1_loss + at2_loss + at3_loss + cls_loss
+            at_loss = at1_loss + at2_loss + at3_loss + at4_loss + cls_loss
 
             prec1, prec5 = accuracy(output_s, target, topk=(1, 5))
             at_losses.update(at_loss.item(), img.size(0))
@@ -95,9 +96,10 @@ class NAD:
                 target = target.cuda()
 
             with torch.no_grad():
-                activation1_s, activation2_s, activation3_s, output_s = snet(img)
-                activation1_t, activation2_t, activation3_t, _ = tnet(img)
+                activation1_s, activation2_s, activation3_s, activation4_s, output_s = snet(img)
+                activation1_t, activation2_t, activation3_t, activation4_t, _ = tnet(img)
 
+                at3_loss = criterionAT(activation4_s, activation4_t.detach()) * self.args.beta3
                 at3_loss = criterionAT(activation3_s, activation3_t.detach()) * self.args.beta3
                 at2_loss = criterionAT(activation2_s, activation2_t.detach()) * self.args.beta2
                 at1_loss = criterionAT(activation1_s, activation1_t.detach()) * self.args.beta1
