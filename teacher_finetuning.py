@@ -48,7 +48,7 @@ class TeacherFineTuning:
        
 
 
-    def fineTune(self, testloader_clean, testloader_bd, isolate_clean_data_loader):
+    def fineTune(self, isolate_clean_data_loader):
         arg = self.args       
         start_epoch = 0
 

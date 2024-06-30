@@ -249,7 +249,7 @@ def main():
         runTestNad(testloader_clean, testloader_bd, teacher_model, criterion, writer)
 
         tft = TeacherFineTuning(teacher_model, arg)
-        fineTunedModel = tft.fineTune(testloader_clean, testloader_bd, clean_data_loader)
+        fineTunedModel = tft.fineTune(clean_data_loader)
 
         runTestNad(testloader_clean, testloader_bd, fineTunedModel, criterion, writer)
         print("Teacher Fine Tuning Complete")
