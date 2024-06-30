@@ -35,6 +35,7 @@ from utils import args
 from utils.network import get_network
 from utils.dataloader_bd import get_dataloader_train, get_dataloader_test, Dataset_npy
 from test_model import test_epoch
+from models.resnet_cifar10_nad import resnet18_nad
 
 
 def load_dataset(arg):
@@ -240,9 +241,9 @@ def main():
         runTest(testloader_clean, testloader_bd, model, criterion, writer)
     elif arg.unlearn_type == 'nad':
 
+        clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data[:1000], poison_data)
 
-        teacher_model = getModel(arg)
-
+        teacher_model = getResnetNadModel(arg)
         csvFile = open(f_name, 'a', newline='')
         writer = csv.writer(csvFile)
         runTest(testloader_clean, testloader_bd, model, criterion, writer)
@@ -255,7 +256,7 @@ def main():
 
         print("Student Model Test")
 
-        student_model = getModel(arg)
+        student_model = getResnetNadModel(arg)
 
         runTest(testloader_clean, testloader_bd, student_model, criterion, writer)
 
@@ -267,9 +268,9 @@ def main():
 
 
 
-
-def getModel(arg):
-    model = get_network(arg)
+def getResnetNadModel(arg):
+    model = resnet18_nad()
+    model.to(arg.device)
     model = torch.nn.DataParallel(model)
     checkpoint = torch.load(arg.checkpoint_load)
     model.load_state_dict(checkpoint['model'])
