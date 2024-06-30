@@ -25,6 +25,9 @@ class TeacherFineTuning:
     def train_step_relearning(self, train_loader, epoch):
         self.model.train()
         total_clean, total_clean_correct = 0, 0
+        for param in self.model.parameters():
+            param.requires_grad = True
+
         for param_group in self.optimizer.param_groups:
             print(f"Epoch {epoch}, Learning Rate: {param_group['lr']}")
 
