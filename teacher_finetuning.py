@@ -32,7 +32,7 @@ class TeacherFineTuning:
             img = normalization(self.args, img)
             img = img.cuda()
             target = target.cuda()
-            output = self.model(img)
+            activation1_s, activation2_s, activation3_s, output = self.model(img)
             loss = self.criterion(output, target)
 
             self.optimizer.zero_grad()
