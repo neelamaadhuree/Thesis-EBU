@@ -65,14 +65,14 @@ def get_args():
     parser.add_argument('--pruning-step', type=float, default=0.05, help='the step size for evaluating the pruning')
 
     parser.add_argument('--nad-beta1', type=int, default=500, help='beta of low layer')
-    parser.add_argument('--nad-beta2', type=int, default=1000, help='beta of middle layer')
-    parser.add_argument('--nad-beta3', type=int, default=1000, help='beta of high layer')
+    parser.add_argument('--nad-beta2', type=int, default=1500, help='beta of middle layer')
+    parser.add_argument('--nad-beta3', type=int, default=1500, help='beta of high layer')
     parser.add_argument('--nad-beta4', type=int, default=1000, help='beta of high layer')
 
 
     parser.add_argument('--nad-momentum', type=float, default=0.9, help='momentum')
     parser.add_argument('--nad-weight_decay', type=float, default=1e-4, help='weight decay')
-    parser.add_argument('--nad-p', type=float, default=2.0, help='power for AT')
+    parser.add_argument('--nad-p', type=float, default=1.0, help='power for AT')
     parser.add_argument('--student-epochs', type=int, default=30)
 
 
