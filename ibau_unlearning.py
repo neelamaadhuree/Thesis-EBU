@@ -7,6 +7,8 @@ from torch.utils.data import TensorDataset
 import numpy as np
 import random
 import hypergrad as hg
+from utils.utils import accuracy, normalization, AverageMeter
+
 
 class IBAUUnlearning:
     def __init__(self, model, arg, epochs=10, lr=0.01, K = 5):
@@ -38,6 +40,7 @@ class IBAUUnlearning:
         def loss_inner(perturb, model_params):
             images = images_list[0].to(args.device)
             labels = labels_list[0].long().to(args.device)
+            images = normalization(self.args, images)
         #     per_img = torch.clamp(images+perturb[0],min=0,max=1)
             per_img = images+perturb[0]
             per_logits = self.model.forward(per_img)
@@ -52,6 +55,7 @@ class IBAUUnlearning:
         def loss_outer(perturb, model_params):
             portion = 0.01
             images, labels = images_list[batchnum].to(args.device), labels_list[batchnum].long().to(args.device)
+            images = normalization(self.args, images)
             patching = torch.zeros_like(images, device='cuda')
             number = images.shape[0]
             rand_idx = random.sample(list(np.arange(number)),int(number*portion))
@@ -70,6 +74,7 @@ class IBAUUnlearning:
         
             for index, (images, labels, gt_labeld, isCleans) in enumerate(testloader):
                 images = images.to(args.device)
+                images = normalization(self.args, images)
                 ori_lab = torch.argmax(self.model.forward(images),axis = 1).long()
         #         per_logits = model.forward(torch.clamp(images+batch_pert,min=0,max=1))
                 per_logits = self.model.forward(images+batch_pert)
