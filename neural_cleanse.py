@@ -47,7 +47,7 @@ class NeuralCleanse:
         neuron_scores = activation_difference.mean(dim=0) + activation_difference.mean(dim=0)
         num_neurons = neuron_scores.numel()
         frac_to_prune = 0.05
-        num_to_prune = int(num_neurons * self.frac_to_prune)
+        num_to_prune = int(num_neurons * frac_to_prune)
         _, indices_to_prune = torch.topk(neuron_scores.abs(), num_to_prune)
         self.prune_by_index(indices_to_prune)
         # self.prune_by_activation(pruning_score, threshold)
