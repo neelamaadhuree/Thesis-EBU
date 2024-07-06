@@ -222,16 +222,15 @@ def main():
     elif arg.unlearn_type == 'anp':
         csvFile = open(f_name, 'a', newline='')
         writer = csv.writer(csvFile)
-        runTest(testloader_clean, testloader_bd, model, criterion, writer)
         clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data[:1000], poison_data)
         model = getattr(models, 'resnet18_anp')(num_classes=10, norm_layer=models.NoisyBatchNorm2d)
         checkpoint = torch.load(arg.checkpoint_load)
         anpMask = ANPMask(arg)
-
         anpMask.load_state_dict(model, orig_state_dict=checkpoint)
-        print("Starting Masking...")
-
         anpMask.set_model(model)
+        runTest(testloader_clean, testloader_bd, model, criterion, writer)
+
+        print("Starting Masking...")
         anpMask.mask(clean_data_loader, testloader_clean , testloader_bd)
 
         print("Staring pruning...")
