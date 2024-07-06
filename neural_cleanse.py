@@ -42,10 +42,27 @@ class NeuralCleanse:
     def unlearn(self, clean_data_loader, poision_data_loader):
         average_clean_activation =  self.get_average_activation_map(clean_data_loader)
         average_poison_activation =  self.get_average_activation_map(poision_data_loader)
-        activation_difference = average_poison_activation - average_clean_activation
+
+        mean_clean = average_clean_activation.mean(dim=0)
+        mean_poison = average_poison_activation.mean(dim=0)
+        var_clean = average_clean_activation.var(dim=0)
+        var_poison = average_poison_activation.var(dim=0)
+
+        # Weight differences by variance
+        activation_difference = (mean_poison - mean_clean) * (var_poison + var_clean)
+
+        # Apply significance threshold
+        threshold = activation_difference.std()  # Using standard deviation as a dynamic threshold
+        significant_activation_difference = torch.where(
+            torch.abs(activation_difference) > threshold,
+            activation_difference,
+            torch.zeros_like(activation_difference)
+        )
+
+        neuron_scores = significant_activation_difference
         
-        neuron_scores = activation_difference.mean(dim=0)
-        neuron_scores_flat = neuron_scores.view(-1)  # Flatten the tensor
+        neuron_scores = activation_difference
+        neuron_scores_flat = neuron_scores.view(-1)
 
         num_neurons = neuron_scores_flat.numel()
         frac_to_prune = 0.2
