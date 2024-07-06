@@ -305,7 +305,7 @@ def get_mixed_data(poison_ratio, clean_data, poison_data):
 def get_test_and_unlearn_dataset(testloader):
     images_list, labels_list = [], []
     for index, (images, labels, gt_labeld, isCleans) in enumerate(testloader):
-        images_list.append(images)
+        images_list.append(images[0])
         labels_list.append(labels)
     unl_set = TensorDataset(images_list[:5000],labels_list[:5000])
     test_set = TensorDataset(images_list[5000:],labels_list[5000:])
