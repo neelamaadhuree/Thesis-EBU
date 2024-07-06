@@ -105,7 +105,7 @@ class ANPMask:
         total_loss = 0.0
         nb_samples = 0
         for i, (images, labels, flag) in enumerate(data_loader):
-            #images = normalization(self.args, images)  # Normalize
+            images = normalization(self.args, images)  # Normalize
             images, labels = images.to(self.device), labels.to(self.device)
             nb_samples += images.size(0)
 
@@ -155,6 +155,7 @@ class ANPMask:
         total_loss = 0.0
         with torch.no_grad():
             for i, (images, labels, gt_labels, isCleans) in enumerate(data_loader):
+                images = normalization(self.args, images) 
                 images, labels = images.to(self.device), labels.to(self.device)
                 output = model(images)
                 total_loss += criterion(output, labels).item()
