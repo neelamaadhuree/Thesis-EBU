@@ -48,7 +48,7 @@ class NeuralCleanse:
         neuron_scores_flat = neuron_scores.view(-1)  # Flatten the tensor
 
         num_neurons = neuron_scores_flat.numel()
-        frac_to_prune = 0.05
+        frac_to_prune = 0.2
         num_to_prune = int(num_neurons * frac_to_prune)
         _, indices_to_prune = torch.topk(neuron_scores_flat.abs(), num_to_prune)
         self.prune_by_index(indices_to_prune)
@@ -68,6 +68,7 @@ class NeuralCleanse:
 
     def prune_by_index(self, indices):
         with torch.no_grad():
+            current_index=0
             for name, param in self.model.named_parameters():
                 if 'layer3' in name:
                     if 'conv' in name and 'weight' in name or 'bn' in name and ('weight' in name or 'bias' in name):
