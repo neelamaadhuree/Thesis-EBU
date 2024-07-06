@@ -211,8 +211,10 @@ def main():
         writer = csv.writer(csvFile)
         runTest(testloader_clean, testloader_bd, model, criterion, writer)
         clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data[:1000], poison_data)
+        datas =  testloader_clean.dataset
+        breakpoint()
         ibau_unlearning = IBAUUnlearning(model, arg)
-        ibau_unlearning.unlearn(testloader_clean) 
+        ibau_unlearning.unlearn(testloader_clean, testloader_clean) 
         runTest(testloader_clean, testloader_bd, model, criterion, writer)
         csvFile.close()
     elif arg.unlearn_type == 'anp':
