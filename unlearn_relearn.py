@@ -307,8 +307,14 @@ def get_test_and_unlearn_dataset(testloader):
     for index, (images, labels, gt_labeld, isCleans) in enumerate(testloader):
         images_list.append(images[0])
         labels_list.append(labels)
-    unl_set = TensorDataset(images_list[:5000],labels_list[:5000])
-    test_set = TensorDataset(images_list[5000:],labels_list[5000:])
+    
+    images_tensor = torch.cat(images_list)
+    labels_tensor = torch.cat(labels_list)
+    
+    assert images_tensor.size(0) == labels_tensor.size(0), "Mismatch in number of images and labels"
+
+    unl_set = TensorDataset(images_tensor[:5000],labels_tensor[:5000])
+    test_set = TensorDataset(images_tensor[5000:],labels_tensor[5000:])
     return test_set, unl_set
 
 if __name__ == '__main__':
