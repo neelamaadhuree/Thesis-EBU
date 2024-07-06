@@ -54,8 +54,6 @@ class ANPMask:
         for k, v in net.state_dict().items():
             if k in orig_state_dict.keys():
                 new_state_dict[k] = orig_state_dict[k]
-            elif 'running_mean_noisy' in k or 'running_var_noisy' in k or 'num_batches_tracked_noisy' in k:
-                new_state_dict[k] = orig_state_dict[k[:-6]].clone().detach()
             else:
                 new_state_dict[k] = v
         net.load_state_dict(new_state_dict)
