@@ -236,8 +236,9 @@ def main():
 
         print("Staring pruning...")
         model = get_network(arg)
+        model = torch.nn.DataParallel(model)
         checkpoint = torch.load(arg.checkpoint_load)
-        anpMask.load_state_dict(model, orig_state_dict=checkpoint)
+        model.load_state_dict(checkpoint['model'])
         model = model.to(arg.device)
         criterion = nn.CrossEntropyLoss()
         anpPruning = ANPPruning(arg, model=model)
