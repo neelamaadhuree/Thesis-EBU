@@ -37,6 +37,7 @@ from utils.network import get_network
 from utils.dataloader_bd import get_dataloader_train, get_dataloader_test, Dataset_npy
 from test_model import test_epoch, test_epoch_nad
 from models.resnet_cifar10_nad import resnet18_nad
+from utils.utils import normalization
 
 
 def load_dataset(arg):
@@ -211,10 +212,10 @@ def main():
         csvFile = open(f_name, 'a', newline='')
         writer = csv.writer(csvFile)
         runTest(testloader_clean, testloader_bd, model, criterion, writer)
-        clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data[:1000], poison_data)
-        test_set, unl_set = get_test_and_unlearn_dataset(testloader_clean)
+        #clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data[:1000], poison_data)
+        test_set, unl_set = get_test_and_unlearn_dataset(arg, testloader_clean)
         ibau_unlearning = IBAUUnlearning(model, arg)
-        unlloader = torch.utils.data.DataLoader(unl_set, batch_size=args.batch_size, shuffle=False, num_workers=2)
+        unlloader = torch.utils.data.DataLoader(unl_set, batch_size=arg.batch_size, shuffle=False, num_workers=2)
         ibau_unlearning.unlearn(unlloader, test_set) 
         runTest(testloader_clean, testloader_bd, model, criterion, writer)
         csvFile.close()
@@ -302,10 +303,11 @@ def get_mixed_data(poison_ratio, clean_data, poison_data):
     full_data_loader=get_loader(clean_data+poison_data)
     return clean_data_loader,poison_data_loader, full_data_loader
 
-def get_test_and_unlearn_dataset(testloader):
+def get_test_and_unlearn_dataset(args, testloader):
     images_list, labels_list = [], []
     for index, (images, labels, gt_labeld, isCleans) in enumerate(testloader):
-        images_list.append(images[0])
+        images = normalization(args, images)
+        images_list.append(images)
         labels_list.append(labels)
     
     images_tensor = torch.cat(images_list)
