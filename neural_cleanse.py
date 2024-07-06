@@ -62,39 +62,28 @@ class NeuralCleanse:
         neuron_scores = significant_activation_difference
         
         neuron_scores = activation_difference
-        neuron_scores_flat = neuron_scores.view(-1)
+        neuron_scores_flat = neuron_scores
 
         num_neurons = neuron_scores_flat.numel()
         frac_to_prune = 0.2
         num_to_prune = int(num_neurons * frac_to_prune)
-        _, indices_to_prune = torch.topk(neuron_scores_flat.abs(), num_to_prune)
+        values, indices_to_prune = torch.topk(neuron_scores.abs(), k=num_to_prune, dim=0, largest=True)
         self.prune_by_index(indices_to_prune)
 
 
     def prune_by_index(self, indices):
         with torch.no_grad():
-            current_index=0
             for name, param in self.model.named_parameters():
                 if 'layer3' in name:
                     if 'conv' in name and 'weight' in name or 'bn' in name and ('weight' in name or 'bias' in name):
-                        num_elements = param.numel()
-                        # Find indices that fall within this layer's range in the global tensor
-                        layer_indices = [i - current_index for i in indices if current_index <= i < current_index + num_elements]
-                        # Convert these global indices to local indices of the layer
-                        local_indices = [i % param.size(0) for i in layer_indices]
-
-                        if local_indices:  # If there are indices to prune in this layer
-                            mask = torch.ones(param.size(0), dtype=torch.bool)
-                            mask[local_indices] = False
-                            if 'conv' in name and 'weight' in name:
-                                param.data[~mask, :, :, :] = param.data[~mask, :, :, :]  # Retain unpruned values
-                                param.data[mask, :, :, :] = 0  # Zero out the pruned values
-                            elif 'bn' in name:
-                                param.data[~mask] = param.data[~mask]  # Retain unpruned values
-                                param.data[mask] = 0  # Zero out the pruned values
+                        mask = torch.ones(param.size(0), dtype=torch.bool)
+                        mask[indices] = True
+                        if 'conv' in name and 'weight' in name:
+                            param.data[mask, :, :, :] = 0 
+                        elif 'bn' in name:
+                            param.data[mask] = 0
 
 
-                        current_index += num_elements  #
 
 
     
