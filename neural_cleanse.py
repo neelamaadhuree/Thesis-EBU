@@ -43,20 +43,18 @@ class NeuralCleanse:
         average_clean_activation =  self.get_average_activation_map(clean_data_loader)
         average_poison_activation =  self.get_average_activation_map(poision_data_loader)
         activation_difference = average_poison_activation - average_clean_activation
-        pruning_score= activation_difference.mean() + activation_difference.std()
-        threshold = 0.4 
         
+        pruning_score = activation_difference.mean(dim=(1, 2, 3)) + activation_difference.std(dim=(1, 2, 3))
+        threshold = 0.1
         self.prune_by_activation(pruning_score, threshold)
- 
 
     def prune_by_activation(self, pruning_score, threshold):
-        mask = (pruning_score < threshold)
         with torch.no_grad():
             for name, param in self.model.named_parameters():
-                if 'layer3' in name and 'weight' in param.shape:
-                    print("Pruning Test")
-                    param[:, mask, :, :] = 0
-
+                if 'layer3' in name and 'conv' in name and 'weight' in name:
+                    layer_index = int(name.split('.')[1])
+                    mask = pruning_score[layer_index] < threshold
+                    param.data[:, mask, :, :] = 0
 
 
 
