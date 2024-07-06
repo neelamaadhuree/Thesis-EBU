@@ -22,19 +22,14 @@ class IBAUUnlearning:
     ### define the inner loss L2
 
 
-    def unlearn(self, testloader):
+    def unlearn(self, unlearn_loader, test_set):
         args = self.args
         images_list, labels_list = [], []
 
 
-        for index, (images, labels, gt_labeld, isCleans) in enumerate(testloader):
+        for index, (images, labels, gt_labeld, isCleans) in enumerate(unlearn_loader):
             images_list.append(images)
             labels_list.append(labels)
-          
-        testds = testloader.dataset
-        # x_data_first_5000 = torch.stack([testds[i][0] for i in range(5000)])
-        # y_data_first_5000 = torch.tensor([testds[i][1] for i in range(5000)], dtype=torch.long)
-        # test_set = TensorDataset(x_data_first_5000, y_data_first_5000)
 
 
         def loss_inner(perturb, model_params):
@@ -68,10 +63,10 @@ class IBAUUnlearning:
 
         for round in range(self.epochs):
             print("Running" + str(round))
-            batch_pert = torch.zeros_like(testds.tensors[0][:1], requires_grad=True, device='cuda')
+            batch_pert = torch.zeros_like(test_set.tensors[0][:1], requires_grad=True, device='cuda')
             batch_opt = torch.optim.SGD(params=[batch_pert], lr=10)
         
-            for index, (images, labels, gt_labeld, isCleans) in enumerate(testloader):
+            for index, (images, labels, gt_labeld, isCleans) in enumerate(unlearn_loader):
                 images = images.to(args.device)
                 images = normalization(self.args, images)
                 ori_lab = torch.argmax(self.model.forward(images),axis = 1).long()
