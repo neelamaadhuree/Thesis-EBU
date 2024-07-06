@@ -275,13 +275,13 @@ def main():
         model = getResnetNadModel(arg)
         csvFile = open(f_name, 'a', newline='')
         writer = csv.writer(csvFile)
-        runTestNad(testloader_clean, testloader_bd, teacher_model, criterion, writer)
+        runTestNad(testloader_clean, testloader_bd, model, criterion, writer)
 
         neural_cleanse = NeuralCleanse(arg, model)
         neural_cleanse.unlearn(clean_data_loader, poison_data_loader)
 
     
-        runTestNad(testloader_clean, testloader_bd, student_model, criterion, writer)
+        runTestNad(testloader_clean, testloader_bd, model, criterion, writer)
         csvFile.close()
 
 

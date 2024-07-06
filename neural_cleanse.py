@@ -9,9 +9,10 @@ from test_model import test_epoch
 
 class NeuralCleanse:
 
-    def __init___(self, args, model):
+    def __init__(self, args, model):
         self.model= model
         self.device = args.device
+        self.args=args
 
 
 
@@ -43,7 +44,8 @@ class NeuralCleanse:
         average_poison_activation =  self.get_average_activation_map(poision_data_loader)
         activation_difference = average_poison_activation - average_clean_activation
         pruning_score= activation_difference.mean() + activation_difference.std()
-        threshold = 0.1 
+        threshold = 0.4 
+        
         self.prune_by_activation(pruning_score, threshold)
  
 
@@ -52,6 +54,7 @@ class NeuralCleanse:
         with torch.no_grad():
             for name, param in self.model.named_parameters():
                 if 'layer3' in name and 'weight' in param.shape:
+                    print("Pruning Test")
                     param[:, mask, :, :] = 0
 
 
