@@ -7,11 +7,11 @@ import sys
 sys.path.append('../')
 
 
-def get_network(opt):
+def get_network(opt, norm_layer = None):
     if opt.dataset == "cifar10":
         from models.resnet_cifar10 import resnet18, resnet34, resnet50
         all_classifiers_cifar10 = {
-            "resnet18": resnet18(),
+            "resnet18": resnet18(norm_layer),
             "resnet34": resnet34(),
             "resnet50": resnet50()
         }

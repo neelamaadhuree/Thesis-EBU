@@ -223,7 +223,7 @@ def main():
         csvFile = open(f_name, 'a', newline='')
         writer = csv.writer(csvFile)
         clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data[:1000], poison_data)
-        model = getattr(models, 'resnet18_anp')(num_classes=10, norm_layer=models.NoisyBatchNorm2d)
+        model = get_network(arg,  norm_layer=models.NoisyBatchNorm2d)
         checkpoint = torch.load(arg.checkpoint_load)
         anpMask = ANPMask(arg)
         anpMask.load_state_dict(model, orig_state_dict=checkpoint)
@@ -234,7 +234,7 @@ def main():
         anpMask.mask(clean_data_loader, testloader_clean , testloader_bd)
 
         print("Staring pruning...")
-        model = getattr(models, 'resnet18_anp')(num_classes=10)
+        model = get_network(arg)
         checkpoint = torch.load(arg.checkpoint_load)
         anpMask.load_state_dict(model, orig_state_dict=checkpoint)
         model = model.to(arg.device)

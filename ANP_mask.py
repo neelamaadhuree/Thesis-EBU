@@ -47,12 +47,7 @@ class ANPMask:
 
 
     def load_state_dict(self, net, orig_state_dict):
-        orig_state_dict = orig_state_dict.get("state_dict", orig_state_dict)
-
-        new_state_dict = OrderedDict()
-        for k, v in net.state_dict().items():
-            new_state_dict[k] = orig_state_dict.get(k, v)
-        net.load_state_dict(new_state_dict)
+        net.load_state_dict(orig_state_dict['model'])
 
 
     def clip_mask(self, model, lower=0.0, upper=1.0):
