@@ -69,7 +69,19 @@ class NeuralCleanse:
         num_to_prune = int(num_neurons * frac_to_prune)
         _, indices_to_prune = torch.topk(neuron_scores_flat.abs(), num_to_prune)
         self.prune_by_index(indices_to_prune)
+        # self.prune_by_activation(pruning_score, threshold)
 
+    def prune_by_activation(self, pruning_score, threshold):
+        with torch.no_grad():
+            for name, param in self.model.named_parameters():
+                if 'layer3' in name:
+                    layer_index = int(name.split('.')[2])
+                    mask = pruning_score[layer_index] < threshold
+                    if 'conv' in name and 'weight' in name:
+                        param.data[:, mask, :, :] = 0
+                    elif 'bn' in name:
+                        if 'weight' in name or 'bias' in name:
+                            param.data[mask] = 0
 
     def prune_by_index(self, indices):
         with torch.no_grad():
@@ -87,12 +99,9 @@ class NeuralCleanse:
                             mask = torch.ones(param.size(0), dtype=torch.bool)
                             mask[local_indices] = False
                             if 'conv' in name and 'weight' in name:
-                                param.data[~mask, :, :, :] = param.data[~mask, :, :, :]  # Retain unpruned values
-                                param.data[mask, :, :, :] = 0  # Zero out the pruned values
+                                param.data[~mask, :, :, :] = 0
                             elif 'bn' in name:
-                                param.data[~mask] = param.data[~mask]  # Retain unpruned values
-                                param.data[mask] = 0  # Zero out the pruned values
-
+                                param.data[~mask] = 0
 
                         current_index += num_elements  #
 
