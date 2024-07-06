@@ -23,21 +23,22 @@ class NeuralCleanse:
         count = 0
 
         criterion = nn.CrossEntropyLoss()
-        with torch.no_grad():
-            for idx, (img, target, gt_label) in enumerate(dataloader, start=1):
-                if self.args.device == 'cuda':
-                    img = img.cuda()
-                    target = target.cuda()
+        #with torch.no_grad():
+        for idx, (img, target, gt_label) in enumerate(dataloader, start=1):
+            if self.args.device == 'cuda':
+                img = img.cuda()
+                target = target.cuda()
 
-                img = normalization(self.args, img)
-                self.optimizer.zero_grad()
-                activation1_t, activation2_t, activation3_t, activation4_t, out = model(img)
-                loss = criterion(out, target)
-                loss.backward()
-                if total_sum is None:
-                    total_sum = torch.zeros_like(activation3_t)
-                total_sum += activation3_t.sum(dim=0)
-                count += img.size(0)
+            img = normalization(self.args, img)
+            self.optimizer.zero_grad()
+            activation1_t, activation2_t, activation3_t, activation4_t, out = model(img)
+            
+            loss = criterion(out, target)
+            loss.backward()
+            if total_sum is None:
+                total_sum = torch.zeros_like(activation3_t)
+            total_sum += activation3_t.sum(dim=0)
+            count += img.size(0)
 
         average_activation = total_sum / count
         return average_activation
@@ -69,23 +70,24 @@ class NeuralCleanse:
         neuron_scores_flat = neuron_scores.view(-1)
 
         num_neurons = neuron_scores_flat.numel()
-        frac_to_prune = 0.2
+       
+        frac_to_prune = 0.06
         num_to_prune = int(num_neurons * frac_to_prune)
         _, indices_to_prune = torch.topk(neuron_scores_flat.abs(), num_to_prune)
         self.prune_by_index(indices_to_prune)
         # self.prune_by_activation(pruning_score, threshold)
 
-    def prune_by_activation(self, pruning_score, threshold):
-        with torch.no_grad():
-            for name, param in self.model.named_parameters():
-                if 'layer3' in name:
-                    layer_index = int(name.split('.')[2])
-                    mask = pruning_score[layer_index] < threshold
-                    if 'conv' in name and 'weight' in name:
-                        param.data[:, mask, :, :] = 0
-                    elif 'bn' in name:
-                        if 'weight' in name or 'bias' in name:
-                            param.data[mask] = 0
+    # def prune_by_activation(self, pruning_score, threshold):
+    #     with torch.no_grad():
+    #     for name, param in self.model.named_parameters():
+    #         if 'layer3' in name:
+    #             layer_index = int(name.split('.')[2])
+    #             mask = pruning_score[layer_index] < threshold
+    #             if 'conv' in name and 'weight' in name:
+    #                 param.data[:, mask, :, :] = 0
+    #             elif 'bn' in name:
+    #                 if 'weight' in name or 'bias' in name:
+    #                     param.data[mask] = 0
 
     def prune_by_index(self, indices):
         with torch.no_grad():

@@ -270,7 +270,7 @@ def main():
         runTestNad(testloader_clean, testloader_bd, student_model, criterion, writer)
         csvFile.close()
     elif arg.unlearn_type == 'neural_cleanse':
-        clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data, poison_data)
+        clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data[:100], poison_data)
 
         model = getResnetNadModel(arg)
         csvFile = open(f_name, 'a', newline='')
