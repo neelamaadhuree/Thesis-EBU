@@ -35,7 +35,6 @@ class IBAUUnlearning:
         def loss_inner(perturb, model_params):
             images = images_list[0].to(args.device)
             labels = labels_list[0].long().to(args.device)
-            images = normalization(self.args, images)
         #     per_img = torch.clamp(images+perturb[0],min=0,max=1)
             per_img = images+perturb[0]
             per_logits = self.model.forward(per_img)
@@ -47,7 +46,6 @@ class IBAUUnlearning:
         def loss_outer(perturb, model_params):
             portion = 0.01
             images, labels = images_list[batchnum].to(args.device), labels_list[batchnum].long().to(args.device)
-            images = normalization(self.args, images)
             patching = torch.zeros_like(images, device='cuda')
             number = images.shape[0]
             rand_idx = random.sample(list(np.arange(number)),int(number*portion))
@@ -68,7 +66,6 @@ class IBAUUnlearning:
         
             for index, (images, labels) in enumerate(unlearn_loader):
                 images = images.to(args.device)
-                images = normalization(self.args, images)
                 ori_lab = torch.argmax(self.model.forward(images),axis = 1).long()
         #         per_logits = model.forward(torch.clamp(images+batch_pert,min=0,max=1))
                 per_logits = self.model.forward(images+batch_pert)
@@ -79,8 +76,8 @@ class IBAUUnlearning:
                 batch_opt.step()
 
             #l2-ball
-            pert = batch_pert * min(1, 10 / torch.norm(batch_pert))
-            # pert = batch_pert
+            #pert = batch_pert * min(1, 10 / torch.norm(batch_pert))
+            pert = batch_pert
 
             #unlearn step         
             for batchnum in range(len(images_list)): 
