@@ -13,7 +13,7 @@ class NeuralCleanse:
         self.model= model
         self.device = args.device
         self.args=args
-
+        self.optimizer = torch.optim.SGD(self.model.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
 
 
     def get_average_activation_map(self, dataloader):
@@ -22,6 +22,7 @@ class NeuralCleanse:
         total_sum = None
         count = 0
 
+        criterion = nn.CrossEntropyLoss()
         with torch.no_grad():
             for idx, (img, target, gt_label) in enumerate(dataloader, start=1):
                 if self.args.device == 'cuda':
@@ -29,7 +30,10 @@ class NeuralCleanse:
                     target = target.cuda()
 
                 img = normalization(self.args, img)
-                activation1_t, activation2_t, activation3_t, activation4_t, _ = model(img)
+                self.optimizer.zero_grad()
+                activation1_t, activation2_t, activation3_t, activation4_t, out = model(img)
+                loss = criterion(out, target)
+                loss.backward()
                 if total_sum is None:
                     total_sum = torch.zeros_like(activation3_t)
                 total_sum += activation3_t.sum(dim=0)
