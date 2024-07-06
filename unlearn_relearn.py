@@ -24,6 +24,7 @@ from ANP_mask import ANPMask
 from nad import NAD
 from teacher_finetuning import TeacherFineTuning
 import models
+from torch.utils.data import TensorDataset
 
 
 
@@ -211,10 +212,10 @@ def main():
         writer = csv.writer(csvFile)
         runTest(testloader_clean, testloader_bd, model, criterion, writer)
         clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data[:1000], poison_data)
-        datas =  testloader_clean.dataset
-        breakpoint()
+        test_set, unl_set = get_test_and_unlearn_dataset(testloader_clean)
         ibau_unlearning = IBAUUnlearning(model, arg)
-        ibau_unlearning.unlearn(testloader_clean, testloader_clean) 
+        unlloader = torch.utils.data.DataLoader(unl_set, batch_size=args.batch_size, shuffle=False, num_workers=2)
+        ibau_unlearning.unlearn(unlloader, test_set) 
         runTest(testloader_clean, testloader_bd, model, criterion, writer)
         csvFile.close()
     elif arg.unlearn_type == 'anp':
@@ -300,6 +301,15 @@ def get_mixed_data(poison_ratio, clean_data, poison_data):
     poison_data_loader = get_loader(mix_poison)
     full_data_loader=get_loader(clean_data+poison_data)
     return clean_data_loader,poison_data_loader, full_data_loader
+
+def get_test_and_unlearn_dataset(testloader):
+    images_list, labels_list = [], []
+    for index, (images, labels, gt_labeld, isCleans) in enumerate(testloader):
+        images_list.append(images)
+        labels_list.append(labels)
+    unl_set = TensorDataset(images_list[:5000],labels_list[:5000])
+    test_set = TensorDataset(images_list[5000:],labels_list[5000:])
+    return test_set, unl_set
 
 if __name__ == '__main__':
     main()
