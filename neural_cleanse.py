@@ -44,11 +44,13 @@ class NeuralCleanse:
         average_poison_activation =  self.get_average_activation_map(poision_data_loader)
         activation_difference = average_poison_activation - average_clean_activation
         
-        neuron_scores = activation_difference.mean(dim=0) + activation_difference.mean(dim=0)
-        num_neurons = neuron_scores.numel()
+        neuron_scores = activation_difference.mean(dim=0)
+        neuron_scores_flat = neuron_scores.view(-1)  # Flatten the tensor
+
+        num_neurons = neuron_scores_flat.numel()
         frac_to_prune = 0.05
         num_to_prune = int(num_neurons * frac_to_prune)
-        _, indices_to_prune = torch.topk(neuron_scores.abs(), num_to_prune)
+        _, indices_to_prune = torch.topk(neuron_scores_flat.abs(), num_to_prune)
         self.prune_by_index(indices_to_prune)
         # self.prune_by_activation(pruning_score, threshold)
 
