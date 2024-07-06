@@ -32,9 +32,9 @@ class IBAUUnlearning:
             labels_list.append(labels)
           
         testds = testloader.dataset
-        x_data_first_5000 = torch.stack([testds[i][0] for i in range(5000)])
-        y_data_first_5000 = torch.tensor([testds[i][1] for i in range(5000)], dtype=torch.long)
-        test_set = TensorDataset(x_data_first_5000, y_data_first_5000)
+        # x_data_first_5000 = torch.stack([testds[i][0] for i in range(5000)])
+        # y_data_first_5000 = torch.tensor([testds[i][1] for i in range(5000)], dtype=torch.long)
+        # test_set = TensorDataset(x_data_first_5000, y_data_first_5000)
 
 
         def loss_inner(perturb, model_params):
@@ -47,9 +47,6 @@ class IBAUUnlearning:
             loss = F.cross_entropy(per_logits, labels, reduction='none')
             loss_regu = torch.mean(-loss) +0.001*torch.pow(torch.norm(perturb[0]),2)
             return loss_regu
-
-        
-        inner_opt = hg.GradientDescent(loss_inner, 0.1)
 
 
         def loss_outer(perturb, model_params):
@@ -67,9 +64,11 @@ class IBAUUnlearning:
             loss = criterion(logits, labels)
             return loss
 
+        inner_opt = hg.GradientDescent(loss_inner, 0.1)
+
         for round in range(self.epochs):
             print("Running" + str(round))
-            batch_pert = torch.zeros_like(test_set.tensors[0][:1], requires_grad=True, device='cuda')
+            batch_pert = torch.zeros_like(testds.tensors[0][:1], requires_grad=True, device='cuda')
             batch_opt = torch.optim.SGD(params=[batch_pert], lr=10)
         
             for index, (images, labels, gt_labeld, isCleans) in enumerate(testloader):
@@ -85,8 +84,8 @@ class IBAUUnlearning:
                 batch_opt.step()
 
             #l2-ball
-            # pert = batch_pert * min(1, 10 / torch.norm(batch_pert))
-            pert = batch_pert
+            pert = batch_pert * min(1, 10 / torch.norm(batch_pert))
+            # pert = batch_pert
 
             #unlearn step         
             for batchnum in range(len(images_list)): 
