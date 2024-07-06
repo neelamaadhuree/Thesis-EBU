@@ -261,8 +261,8 @@ class ResNet(nn.Module):
         return x
 
 
-def _resnet(arch, block, layers, pretrained, progress, device, **kwargs):
-    model = ResNet(block, layers, **kwargs)
+def _resnet(arch, block, layers, pretrained, progress, norm_layer, device, **kwargs):
+    model = ResNet(block, layers, norm_layer, **kwargs)
     if pretrained:
         script_dir = os.path.dirname(__file__)
         state_dict = torch.load(
@@ -272,34 +272,34 @@ def _resnet(arch, block, layers, pretrained, progress, device, **kwargs):
     return model
 
 
-def resnet18(pretrained=False, progress=True, device="cpu", **kwargs):
+def resnet18(pretrained=False, progress=True, device="cpu", norm_layer = None, **kwargs):
     """Constructs a ResNet-18 model.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
     return _resnet(
-        "resnet18", BasicBlock, [2, 2, 2, 2], pretrained, progress, device, **kwargs
+        "resnet18", BasicBlock, [2, 2, 2, 2], pretrained, progress, norm_layer, device, **kwargs
     )
 
 
-def resnet34(pretrained=False, progress=True, device="cpu", **kwargs):
+def resnet34(pretrained=False, progress=True, device="cpu", norm_layer = None, **kwargs):
     """Constructs a ResNet-34 model.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
     return _resnet(
-        "resnet34", BasicBlock, [3, 4, 6, 3], pretrained, progress, device, **kwargs
+        "resnet34", BasicBlock, [3, 4, 6, 3], pretrained, progress, norm_layer, device, **kwargs
     )
 
 
-def resnet50(pretrained=False, progress=True, device="cpu", **kwargs):
+def resnet50(pretrained=False, progress=True, device="cpu", norm_layer = None, **kwargs):
     """Constructs a ResNet-50 model.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
     return _resnet(
-        "resnet50", Bottleneck, [3, 4, 6, 3], pretrained, progress, device, **kwargs
+        "resnet50", Bottleneck, [3, 4, 6, 3], pretrained, progress, norm_layer, device, **kwargs
     )
