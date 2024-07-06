@@ -25,7 +25,7 @@ from nad import NAD
 from teacher_finetuning import TeacherFineTuning
 import models
 from torch.utils.data import TensorDataset
-
+from neural_cleanse import NeuralCleanse
 
 
 
@@ -267,6 +267,20 @@ def main():
         nad = NAD(arg, fineTunedModel, student_model)
         nad.train(clean_data_loader)
         print("Student Fine Tuning Complete")
+        runTestNad(testloader_clean, testloader_bd, student_model, criterion, writer)
+        csvFile.close()
+    elif arg.unlearn_type == 'neural_cleanse':
+        clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data[:3000], poison_data)
+
+        model = getResnetNadModel(arg)
+        csvFile = open(f_name, 'a', newline='')
+        writer = csv.writer(csvFile)
+        runTestNad(testloader_clean, testloader_bd, teacher_model, criterion, writer)
+
+        neural_cleanse = NeuralCleanse(arg, model)
+        neural_cleanse.unlearn(clean_data_loader, poison_data_loader)
+
+    
         runTestNad(testloader_clean, testloader_bd, student_model, criterion, writer)
         csvFile.close()
 

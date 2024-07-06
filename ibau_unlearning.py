@@ -39,7 +39,7 @@ class IBAUUnlearning:
             per_img = images+perturb[0]
             per_logits = self.model.forward(per_img)
             loss = F.cross_entropy(per_logits, labels, reduction='none')
-            loss_regu = torch.mean(-loss) +0.001*torch.pow(torch.norm(perturb[0]),2)
+            loss_regu = torch.mean(-loss) +0.01 *torch.pow(torch.norm(perturb[0]),2)
             return loss_regu
 
 
@@ -70,7 +70,7 @@ class IBAUUnlearning:
         #         per_logits = model.forward(torch.clamp(images+batch_pert,min=0,max=1))
                 per_logits = self.model.forward(images+batch_pert)
                 loss = F.cross_entropy(per_logits, ori_lab, reduction='mean')
-                loss_regu = torch.mean(-loss) +0.001*torch.pow(torch.norm(batch_pert),2)
+                loss_regu = torch.mean(-loss) +0.01 *torch.pow(torch.norm(batch_pert),2)
                 batch_opt.zero_grad()
                 loss_regu.backward(retain_graph = True)
                 batch_opt.step()
