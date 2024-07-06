@@ -44,9 +44,13 @@ class NeuralCleanse:
         average_poison_activation =  self.get_average_activation_map(poision_data_loader)
         activation_difference = average_poison_activation - average_clean_activation
         
-        pruning_score = activation_difference.mean(dim=(128, 256, 8, 8)) + activation_difference.std(dim=(128, 256, 8, 8))
-        threshold = 0.1
-        self.prune_by_activation(pruning_score, threshold)
+        neuron_scores = activation_difference.mean(dim=0) + activation_difference.mean(dim=0)
+        num_neurons = neuron_scores.numel()
+        frac_to_prune = 0.05
+        num_to_prune = int(num_neurons * self.frac_to_prune)
+        _, indices_to_prune = torch.topk(neuron_scores.abs(), num_to_prune)
+        self.prune_by_index(indices_to_prune)
+        # self.prune_by_activation(pruning_score, threshold)
 
     def prune_by_activation(self, pruning_score, threshold):
         with torch.no_grad():
@@ -59,6 +63,20 @@ class NeuralCleanse:
                     elif 'bn' in name:
                         if 'weight' in name or 'bias' in name:
                             param.data[mask] = 0
+
+    def prune_by_index(self, indices):
+        with torch.no_grad():
+            for name, param in self.model.named_parameters():
+                if 'layer3' in name:
+                    if 'conv' in name and 'weight' in name:
+                        mask = torch.ones(param.size(0), dtype=torch.bool)  # Create a mask for output channels
+                        mask[indices] = False  # Set indices we want to prune to False
+                        param.data[~mask, :, :, :] = 0  # Zero out the entire channel
+                    elif 'bn' in name:
+                        if 'weight' in name or 'bias' in name:
+                            mask = torch.ones(param.size(0), dtype=torch.bool)  # Similar mask for batchnorm params
+                            mask[indices] = False
+                            param.data[~mask] = 0  # Apply pruning to batchnorm weights/biases
 
 
 
