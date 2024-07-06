@@ -70,16 +70,22 @@ class NeuralCleanse:
         with torch.no_grad():
             for name, param in self.model.named_parameters():
                 if 'layer3' in name:
-                    if 'conv' in name and 'weight' in name:
-                        mask = torch.ones(param.size(0), dtype=torch.bool)  # Create a mask for output channels
-                        mask[indices] = False  # Set indices we want to prune to False
-                        param.data[~mask, :, :, :] = 0  # Zero out the entire channel
-                    elif 'bn' in name:
-                        if 'weight' in name or 'bias' in name:
-                            mask = torch.ones(param.size(0), dtype=torch.bool)  # Similar mask for batchnorm params
-                            mask[indices] = False
-                            param.data[~mask] = 0  # Apply pruning to batchnorm weights/biases
+                    if 'conv' in name and 'weight' in name or 'bn' in name and ('weight' in name or 'bias' in name):
+                        num_elements = param.numel()
+                        # Find indices that fall within this layer's range in the global tensor
+                        layer_indices = [i - current_index for i in indices if current_index <= i < current_index + num_elements]
+                        # Convert these global indices to local indices of the layer
+                        local_indices = [i % param.size(0) for i in layer_indices]
 
+                        if local_indices:  # If there are indices to prune in this layer
+                            mask = torch.ones(param.size(0), dtype=torch.bool)
+                            mask[local_indices] = False
+                            if 'conv' in name and 'weight' in name:
+                                param.data[~mask, :, :, :] = 0
+                            elif 'bn' in name:
+                                param.data[~mask] = 0
+
+                        current_index += num_elements  #
 
 
     
