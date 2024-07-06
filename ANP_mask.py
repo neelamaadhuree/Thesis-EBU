@@ -47,11 +47,12 @@ class ANPMask:
 
 
     def load_state_dict(self, net, orig_state_dict):
-        if "state_dict" in orig_state_dict.keys():
-            orig_state_dict = orig_state_dict["state_dict"]
+        # if "state_dict" in orig_state_dict.keys():
+        #     orig_state_dict = orig_state_dict["state_dict"]
         
+        orig_state_dict =  orig_state_dict['model']
         new_state_dict = OrderedDict()
-        for k, v in net.state_dict().items():
+        for k, v in net.state_dict()['model'].items():
             if k in orig_state_dict.keys():
                 new_state_dict[k] = orig_state_dict[k]
             elif 'running_mean_noisy' in k or 'running_var_noisy' in k or 'num_batches_tracked_noisy' in k:
