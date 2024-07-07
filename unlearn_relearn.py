@@ -211,10 +211,11 @@ def main():
     elif arg.unlearn_type=='ibau':
         csvFile = open(f_name, 'a', newline='')
         writer = csv.writer(csvFile)
-        runTest(testloader_clean, testloader_bd, model, criterion, writer)
+        # runTest(testloader_clean, testloader_bd, model, criterion, writer)
         # clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data, poison_data)
         ibau_unlearning = IBAUUnlearning(model, arg)
-        clean_data_loader = get_loader(testloader_clean[:5000])
+        clean_data_loader = get_loader(clean_data[:2560])
+        breakpoint()
         ibau_unlearning.unlearn(clean_data_loader) 
         runTest(testloader_clean, testloader_bd, model, criterion, writer)
         csvFile.close()

@@ -27,7 +27,7 @@ class IBAUUnlearning:
         images_list, labels_list = [], []
 
 
-        for index, (images, labels, gt_labels, isCleans) in enumerate(unlearn_loader):
+        for index, (images, labels, isCleans) in enumerate(unlearn_loader):
             images = normalization(args, images)
             images_list.append(images)
             labels_list.append(labels)
@@ -40,7 +40,7 @@ class IBAUUnlearning:
             per_img = images+perturb[0]
             per_logits = self.model.forward(per_img)
             loss = F.cross_entropy(per_logits, labels, reduction='none')
-            loss_regu = torch.mean(-loss) +0.01 * torch.pow(torch.norm(perturb[0]),2)
+            loss_regu = torch.mean(-loss) +0.001 * torch.pow(torch.norm(perturb[0]),2)
             return loss_regu
 
 
@@ -62,17 +62,17 @@ class IBAUUnlearning:
 
         for round in range(self.epochs):
             print("Running" + str(round))
-            batch_pert = torch.zeros_like(unlearn_loader.dataset.tensors[0][:1], requires_grad=True, device='cuda')
+            first_batch = next(iter(unlearn_loader))
+            batch_pert = torch.zeros((1, 3, 32, 32), requires_grad=True, device='cuda')
             batch_opt = torch.optim.SGD(params=[batch_pert], lr=10)
         
-            for index, (images, labels, gt_labels, isCleans) in enumerate(unlearn_loader):
-                images = normalization(args, images)
+            for index, (images, labels, isCleans) in enumerate(unlearn_loader):
                 images = images.to(args.device)
                 ori_lab = torch.argmax(self.model.forward(images),axis = 1).long()
         #         per_logits = model.forward(torch.clamp(images+batch_pert,min=0,max=1))
                 per_logits = self.model.forward(images+batch_pert)
                 loss = F.cross_entropy(per_logits, ori_lab, reduction='mean')
-                loss_regu = torch.mean(-loss) +0.01 *torch.pow(torch.norm(batch_pert),2)
+                loss_regu = torch.mean(-loss) +0.001 *torch.pow(torch.norm(batch_pert),2)
                 batch_opt.zero_grad()
                 loss_regu.backward(retain_graph = True)
                 batch_opt.step()
