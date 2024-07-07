@@ -37,10 +37,10 @@ class IBAUUnlearning:
             images = images_list[0].to(args.device)
             labels = labels_list[0].long().to(args.device)
         #     per_img = torch.clamp(images+perturb[0],min=0,max=1)
-            per_img = images+perturb[0]
+            per_img = images+perturb
             per_logits = self.model.forward(per_img)
             loss = F.cross_entropy(per_logits, labels, reduction='none')
-            loss_regu = torch.mean(-loss) +0.001 * torch.pow(torch.norm(perturb[0]),2)
+            loss_regu = torch.mean(-loss) +0.001 * torch.pow(torch.norm(perturb),2)
             return loss_regu
 
 
@@ -65,8 +65,9 @@ class IBAUUnlearning:
             first_batch = next(iter(unlearn_loader))
             batch_pert = torch.zeros((1, 3, 32, 32), requires_grad=True, device='cuda')
             batch_opt = torch.optim.SGD(params=[batch_pert], lr=10)
-        
+            
             for index, (images, labels, isCleans) in enumerate(unlearn_loader):
+                images= normalization(self.args,images)
                 images = images.to(args.device)
                 ori_lab = torch.argmax(self.model.forward(images),axis = 1).long()
         #         per_logits = model.forward(torch.clamp(images+batch_pert,min=0,max=1))
