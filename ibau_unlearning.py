@@ -22,12 +22,13 @@ class IBAUUnlearning:
     ### define the inner loss L2
 
 
-    def unlearn(self, unlearn_loader, test_set):
+    def unlearn(self, unlearn_loader):
         args = self.args
         images_list, labels_list = [], []
 
 
-        for index, (images, labels) in enumerate(unlearn_loader):
+        for index, (images, labels, gt_labels, isCleans) in enumerate(unlearn_loader):
+            images = normalization(args, images)
             images_list.append(images)
             labels_list.append(labels)
 
@@ -39,7 +40,7 @@ class IBAUUnlearning:
             per_img = images+perturb[0]
             per_logits = self.model.forward(per_img)
             loss = F.cross_entropy(per_logits, labels, reduction='none')
-            loss_regu = torch.mean(-loss) +0.01 *torch.pow(torch.norm(perturb[0]),2)
+            loss_regu = torch.mean(-loss) +0.01 * torch.pow(torch.norm(perturb[0]),2)
             return loss_regu
 
 
@@ -61,10 +62,11 @@ class IBAUUnlearning:
 
         for round in range(self.epochs):
             print("Running" + str(round))
-            batch_pert = torch.zeros_like(test_set.tensors[0][:1], requires_grad=True, device='cuda')
+            batch_pert = torch.zeros_like(unlearn_loader.dataset.tensors[0][:1], requires_grad=True, device='cuda')
             batch_opt = torch.optim.SGD(params=[batch_pert], lr=10)
         
-            for index, (images, labels) in enumerate(unlearn_loader):
+            for index, (images, labels, gt_labels, isCleans) in enumerate(unlearn_loader):
+                images = normalization(args, images)
                 images = images.to(args.device)
                 ori_lab = torch.argmax(self.model.forward(images),axis = 1).long()
         #         per_logits = model.forward(torch.clamp(images+batch_pert,min=0,max=1))
@@ -79,11 +81,13 @@ class IBAUUnlearning:
             #pert = batch_pert * min(1, 10 / torch.norm(batch_pert))
             pert = batch_pert
 
+            print("Done perturb" + str(round))
+
             #unlearn step         
             for batchnum in range(len(images_list)): 
                 self.outer_opt.zero_grad()
                 hg.fixed_point(pert, list(self.model.parameters()), self.K, inner_opt, loss_outer) 
                 self.outer_opt.step()
 
-            print("Done" + str(round))
+            print("Done Epoch" + str(round))
 
