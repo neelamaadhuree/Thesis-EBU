@@ -56,13 +56,13 @@ def get_args():
 
     parser.add_argument('--anp-output-dir', type=str, default='./saved/anp/')
     parser.add_argument('--nb-iter', type=int, default=2000, help='the number of iterations for training')
-    parser.add_argument('--anp-eps', type=float, default=0.4)
-    parser.add_argument('--anp-steps', type=int, default=1)
-    parser.add_argument('--anp-alpha', type=float, default=0.2)
+    parser.add_argument('--anp-eps', type=float, default=0.4) #  
+    parser.add_argument('--anp-steps', type=int, default=1) # higher values 
+    parser.add_argument('--anp-alpha', type=float, default=0.1) # increase alpha 
     parser.add_argument('--print-every', type=int, default=500, help='print results every few iterations')
-    parser.add_argument('--pruning-by', type=str, default='threshold', choices=['number', 'threshold'])
-    parser.add_argument('--pruning-max', type=float, default=0.90, help='the maximum number/threshold for pruning')
-    parser.add_argument('--pruning-step', type=float, default=0.05, help='the step size for evaluating the pruning')
+    parser.add_argument('--pruning-by', type=str, default='number', choices=['number', 'threshold'])
+    parser.add_argument('--pruning-max', type=float, default=20, help='the maximum number/threshold for pruning') # dont touch #0.90
+    parser.add_argument('--pruning-step', type=float, default=1, help='the step size for evaluating the pruning') #increase #0.05
 
     parser.add_argument('--nad-beta1', type=int, default=500, help='beta of low layer')
     parser.add_argument('--nad-beta2', type=int, default=1500, help='beta of middle layer')

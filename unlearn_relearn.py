@@ -222,7 +222,7 @@ def main():
     elif arg.unlearn_type == 'anp':
         csvFile = open(f_name, 'a', newline='')
         writer = csv.writer(csvFile)
-        clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data[:1000], poison_data)
+        clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data[:100], poison_data)
         model = get_network(arg,  norm_layer=models.NoisyBatchNorm2d)
         model = torch.nn.DataParallel(model)
         checkpoint = torch.load(arg.checkpoint_load)
