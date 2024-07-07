@@ -11,7 +11,7 @@ from utils.utils import accuracy, normalization, AverageMeter, progress_bar
 
 
 class IBAUUnlearning:
-    def __init__(self, model, arg, epochs=10, lr=0.01, K = 5):
+    def __init__(self, model, arg, epochs=5, lr=0.01, K =10):
         self.model = model
         self.epochs = epochs
         self.args = arg
@@ -36,8 +36,8 @@ class IBAUUnlearning:
         def loss_inner(perturb, model_params):
             images = images_list[0].to(args.device)
             labels = labels_list[0].long().to(args.device)
-        #     per_img = torch.clamp(images+perturb[0],min=0,max=1)
-            per_img = images+perturb[0]
+            per_img = torch.clamp(images+perturb[0],min=0,max=1)
+            #per_img = images+perturb[0]
             per_logits = self.model.forward(per_img)
             loss = F.cross_entropy(per_logits, labels, reduction='none')
             loss_regu = torch.mean(-loss) +0.001 * torch.pow(torch.norm(perturb[0]),2)
@@ -45,14 +45,14 @@ class IBAUUnlearning:
 
 
         def loss_outer(perturb, model_params):
-            portion = 0.01
+            portion = 0.2
             images, labels = images_list[batchnum].to(args.device), labels_list[batchnum].long().to(args.device)
             patching = torch.zeros_like(images, device='cuda')
             number = images.shape[0]
             rand_idx = random.sample(list(np.arange(number)),int(number*portion))
             patching[rand_idx] = perturb[0]
-            #     unlearn_imgs = torch.clamp(images+patching,min=0,max=1)
-            unlearn_imgs = images+patching
+            # unlearn_imgs = torch.clamp(images+patching,min=0,max=1)
+            unlearn_imgs = images + patching
             logits = self.model(unlearn_imgs)
             criterion = nn.CrossEntropyLoss()
             loss = criterion(logits, labels)
@@ -79,8 +79,8 @@ class IBAUUnlearning:
                 batch_opt.step()
 
             #l2-ball
-            pert = batch_pert * min(1, 10 / torch.norm(batch_pert))
-            #pert = batch_pert
+            #pert = batch_pert * min(1, 10 / torch.norm(batch_pert))
+            pert = batch_pert
 
             #unlearn step         
             for batchnum in range(len(images_list)): 
