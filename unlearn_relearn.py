@@ -191,7 +191,7 @@ def main():
         rnr_learning.unlearn(clean_data_loader, testloader_clean, testloader_bd)
     elif arg.unlearn_type=='cfu':
         cf = ContinuousForgetting(arg, criterion)
-        clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data, poison_data)
+        clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data[:3000], poison_data)
         cf.relearn(30, model, clean_data_loader, testloader_clean, testloader_bd)
     elif arg.unlearn_type=='ssd':        
 
@@ -201,27 +201,28 @@ def main():
         csvFile = open(f_name, 'a', newline='')
         writer = csv.writer(csvFile)
         runTest(testloader_clean, testloader_bd, model, criterion, writer)
-        model=ssd_tuning(model,poison_data_loader,1.0,45,clean_data_loader, arg.device, arg)
+        model=ssd_tuning(model,poison_data_loader,0.50,100,clean_data_loader, arg.device, arg)
         runTest(testloader_clean, testloader_bd, model, criterion, writer)
         csvFile.close()
     elif arg.unlearn_type=='cfn':
-        clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data[:20000], poison_data)
+        clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data[:100], poison_data)
         cfn_unlearning = CFNUnlearning(model, criterion, arg)
         cfn_unlearning.unlearn(testloader_clean, testloader_bd, clean_data_loader)
     elif arg.unlearn_type=='ibau':
         csvFile = open(f_name, 'a', newline='')
         writer = csv.writer(csvFile)
-        # runTest(testloader_clean, testloader_bd, model, criterion, writer)
+        runTest(testloader_clean, testloader_bd, model, criterion, writer)
         # clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data, poison_data)
         ibau_unlearning = IBAUUnlearning(model, arg)
-        clean_data_loader = get_loader(clean_data[:2560])
+        clean_data_loader = get_loader(clean_data[:3000])
         ibau_unlearning.unlearn(clean_data_loader) 
         runTest(testloader_clean, testloader_bd, model, criterion, writer)
         csvFile.close()
     elif arg.unlearn_type == 'anp':
         csvFile = open(f_name, 'a', newline='')
         writer = csv.writer(csvFile)
-        clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data[:100], poison_data)
+        clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data[:3000], poison_data)
+        
         model = get_network(arg,  norm_layer=models.NoisyBatchNorm2d)
         model = torch.nn.DataParallel(model)
         checkpoint = torch.load(arg.checkpoint_load)

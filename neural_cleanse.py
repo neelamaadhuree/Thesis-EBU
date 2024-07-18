@@ -33,8 +33,8 @@ class NeuralCleanse:
             self.optimizer.zero_grad()
             activation1_t, activation2_t, activation3_t, activation4_t, out = model(img)
             
-            loss = criterion(out, target)
-            loss.backward()
+            #loss = criterion(out, target)
+            #loss.backward()
             if total_sum is None:
                 total_sum = torch.zeros_like(activation3_t)
             total_sum += activation3_t.sum(dim=0)

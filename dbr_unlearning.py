@@ -113,9 +113,9 @@ class DBRUnlearning:
             test_loss_bd, test_acc_bd, test_acc_robust = test_epoch(arg, testloader_bd, self.model, self.criterion, epoch, 'bd')
 
             # Save the best model
-            if test_acc_cl - test_acc_bd > best_acc:
-                best_acc = test_acc_cl - test_acc_bd
-                save_checkpoint_only(arg.checkpoint_save, self.model)
+            #if test_acc_cl - test_acc_bd > best_acc:
+            #    best_acc = test_acc_cl - test_acc_bd
+            #    save_checkpoint_only(arg.checkpoint_save, self.model)
 
             writer.writerow([epoch, test_acc_cl.item(), test_acc_bd.item()])
         csvFile.close()

@@ -333,7 +333,7 @@ class DatasetBD(torch.utils.data.Dataset):
                 - patch: Trigger image to apply (numpy array).
                 - alpha: Opacity of the patch.
             """
-            patch = cv2.imread('F://Python Projects//Thesis//poison_dataset//utils//patch_img.jpg')  # Load your patch image
+            patch = cv2.imread('./utils/patch_img.jpg')  # Load your patch image
             # print(width, height)
             img = self._patchTrigger(img, patch,width, height, alpha=0.2)
 
@@ -345,9 +345,9 @@ class DatasetBD(torch.utils.data.Dataset):
   
     def _signalTrigger(self, img, width, height, distance, trig_w, trig_h):
         # strip
-        alpha = 0.2
+        alpha = 0.2 #0.02 , diff pattern random noise
         # load signal mask
-        signal_mask = np.load('./trigger/signal_cifar10_mask.npy')
+        signal_mask = np.load('./trigger/checkerboard_pattern.npy')
         blend_img = (1 - alpha) * img + alpha * signal_mask.reshape((width, height, 1))
         blend_img = np.clip(blend_img.astype('uint8'), 0, 255)
 
@@ -418,7 +418,7 @@ def get_transform(opt, train=True):
     transforms_list.append(transforms.Resize((opt.input_height, opt.input_width)))
     if train:
         if opt.dataset == 'cifar10' or opt.dataset == 'gtsrb':
-            transforms_list.append(transforms.RandomCrop((opt.input_height, opt.input_width), padding=4))
+            transforms_list.append(transforms.RandomCrop((opt.input_height, opt.input_width), padding=4))  ## maybe try to avoid this 
             transforms_list.append(transforms.RandomHorizontalFlip())
         elif opt.dataset == 'cifar100':
             transforms_list.append(transforms.RandomCrop((opt.input_height, opt.input_width), padding=4))
