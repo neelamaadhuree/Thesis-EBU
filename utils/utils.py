@@ -38,7 +38,8 @@ class AverageMeter(object):
         self.avg = self.sum / self.count
 
 
-_, term_width = os.popen('stty size', 'r').read().split()
+#_, term_width = os.popen('stty size', 'r').read().split()
+term_width = 80
 term_width = int(term_width)
 TOTAL_BAR_LENGTH = 65.
 last_time = time.time()
