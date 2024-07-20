@@ -18,6 +18,8 @@ import torch.nn.functional as F
 import torchvision
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
+import matplotlib.pyplot as plt
+import random
 
 from utils import args
 # from utils.SSBA.encode_image import bd_generator # if you run SSBA attack, please use this line
@@ -71,6 +73,22 @@ class Dataset_npy(torch.utils.data.Dataset):
         return self.dataLen
 
 
+def show_samples(dataset, num_samples=5):
+    indices = random.sample(range(len(dataset.poisoned_images)), num_samples)
+    for idx in indices:
+        fig, ax = plt.subplots(1, 2, figsize=(8, 4))
+        ax[0].imshow(dataset.original_images[idx])
+        ax[0].set_title('Original Image')
+        ax[0].axis('off')
+
+        ax[1].imshow(dataset.poisoned_images[idx])
+        ax[1].set_title('Poisoned Image')
+        ax[1].axis('off')
+
+        plt.show()
+
+# Assuming 'dataset' is an instance of DatasetBD
+
 def get_dataloader_train(opt):
     train = True
     if opt.dataset == "cifar10":
@@ -88,7 +106,7 @@ def get_dataloader_train(opt):
     transform1, transform2, transform3 = get_transform(opt, train)
     train_data_bad = DatasetBD(opt, full_dataset=dataset, inject_portion=opt.poison_rate, transform=TransformThree(transform1, transform2, transform3),
                                mode='train')
-
+    show_samples(train_data_bad)
     dataloader = torch.utils.data.DataLoader(train_data_bad, batch_size=opt.batch_size, num_workers=opt.num_workers,
                                              shuffle=True)
     return dataloader
@@ -138,6 +156,9 @@ def get_dataloader_test(opt):
 class DatasetBD(torch.utils.data.Dataset):
     def __init__(self, opt, full_dataset, inject_portion, transform=None, mode="train", distance=1):
         self.triggerGenerator = None # SSBA
+        
+        self.original_images = []  # To store original images
+        self.poisoned_images = []  # To store poisoned images
         self.addTriggerGenerator(opt.trigger_type, opt.dataset) # SSBA
         self.dataset = self.addTrigger(full_dataset, opt.target_label, inject_portion, mode, distance,
                                        int(0.1 * opt.input_width), int(0.1 * opt.input_height), opt.trigger_type,
@@ -170,7 +191,7 @@ class DatasetBD(torch.utils.data.Dataset):
         if mode == 'train':
             if target_type == 'all2one':
                 non_target_idx = []
-                for i in range(len(dataset)):
+                for i in range(len(dataset)):                    
                     if dataset[i][1] != target_label:
                         non_target_idx.append(i)
                 non_target_idx = np.array(non_target_idx)
@@ -195,7 +216,7 @@ class DatasetBD(torch.utils.data.Dataset):
         cnt = 0
         for i in tqdm(range(len(dataset))):
             data = dataset[i]
-
+            original_img = np.array(data[0])  # Store original image
             if target_type == 'all2one':
 
                 if mode == 'train':
@@ -205,7 +226,8 @@ class DatasetBD(torch.utils.data.Dataset):
                     if i in perm:
                         # select trigger
                         img = self.selectTrigger(mode, img, data[1], width, height, distance, trig_w, trig_h, trigger_type)
-
+                        self.poisoned_images.append(img)
+                        self.original_images.append(original_img)
                         # change target
                         # dataset_.append((img, target_label))
                         dataset_.append((img, target_label, data[1], False))
@@ -223,7 +245,8 @@ class DatasetBD(torch.utils.data.Dataset):
                     height = img.shape[1]
                     if i in perm:
                         img = self.selectTrigger(mode, img, data[1], width, height, distance, trig_w, trig_h, trigger_type)
-
+                        self.poisoned_images.append(img)
+                        self.original_images.append(original_img)
                         # dataset_.append((img, target_label))
                         dataset_.append((img, target_label, data[1], False))
                         cnt += 1
@@ -241,7 +264,8 @@ class DatasetBD(torch.utils.data.Dataset):
                     if i in perm:
                         img = self.selectTrigger(mode, img, data[1], width, height, distance, trig_w, trig_h, trigger_type)
                         target_ = self._change_label_next(data[1])
-
+                        self.poisoned_images.append(img)
+                        self.original_images.append(original_img)
                         # dataset_.append((img, target_))
                         dataset_.append((img, target_, data[1], False))
                         cnt += 1
@@ -259,6 +283,9 @@ class DatasetBD(torch.utils.data.Dataset):
 
                         target_ = self._change_label_next(data[1])
                         # dataset_.append((img, target_))
+                        self.poisoned_images.append(img)
+                        self.original_images.append(original_img)
+                        
                         dataset_.append((img, target_, data[1], False))
                         cnt += 1
                     else:
@@ -345,9 +372,9 @@ class DatasetBD(torch.utils.data.Dataset):
   
     def _signalTrigger(self, img, width, height, distance, trig_w, trig_h):
         # strip
-        alpha = 0.2 #0.02 , diff pattern random noise
+        alpha = 0.2#0.02 , diff pattern random noise
         # load signal mask
-        signal_mask = np.load('./trigger/checkerboard_pattern.npy')
+        signal_mask = np.load('./trigger/checkerboard_pattern2.npy')
         blend_img = (1 - alpha) * img + alpha * signal_mask.reshape((width, height, 1))
         blend_img = np.clip(blend_img.astype('uint8'), 0, 255)
 
