@@ -76,6 +76,10 @@ def get_args():
     parser.add_argument('--student-epochs', type=int, default=30)
 
 
+    parser.add_argument('--freq-domain-window-size', type=float, default=32, help='Window size for Freq domain')
+    parser.add_argument('--freq-domain-magnitude', type=float, default=20, help='Magnitude for frequency domain')
+    parser.add_argument('--freq-domain-yuv', type=bool, default=False)
+
 
 
     arg = parser.parse_args()
