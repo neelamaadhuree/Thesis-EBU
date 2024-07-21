@@ -50,7 +50,8 @@ def poison_frequency_direct(x_train, args):
     pos_list= [(31, 31), (15, 15)]
     if x_train.shape[0] == 0:
         return x_train
-    x_train *= 255.0
+    
+    x_train *= 255
     if args.freq_domain_yuv:
         # transfer to YUV channel
         x_train = RGB2YUV(x_train)
