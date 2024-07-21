@@ -20,7 +20,7 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import matplotlib.pyplot as plt
 import random
-from frequency_model import poison_frequency_direct
+from .frequency_model import poison_frequency_direct
 
 from utils import args
 # from utils.SSBA.encode_image import bd_generator # if you run SSBA attack, please use this line
@@ -374,7 +374,7 @@ class DatasetBD(torch.utils.data.Dataset):
 
     def _frequencyDomainPatchTrigger(self, img):
         img = np.expand_dims(img, axis=0)  # Add batch dimension
-        img = poison_frequency_direct(img, args)
+        img = poison_frequency_direct(img, arg)
         img = img[0]  # Remove batch dimension
         return img
 
@@ -384,6 +384,7 @@ class DatasetBD(torch.utils.data.Dataset):
         alpha = 0.2#0.02 , diff pattern random noise
         # load signal mask
         signal_mask = np.load('./trigger/checkerboard_pattern2.npy')
+        #signal_mask = np.load('./trigger/signal_cifar10_mask.npy')
         blend_img = (1 - alpha) * img + alpha * signal_mask.reshape((width, height, 1))
         blend_img = np.clip(blend_img.astype('uint8'), 0, 255)
 

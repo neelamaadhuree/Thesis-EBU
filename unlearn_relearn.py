@@ -246,7 +246,7 @@ def main():
         runTest(testloader_clean, testloader_bd, model, criterion, writer)
     elif arg.unlearn_type == 'nad':
 
-        clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data[:3000], poison_data)
+        clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data[:500], poison_data)
 
         teacher_model = getResnetNadModel(arg)
         csvFile = open(f_name, 'a', newline='')
