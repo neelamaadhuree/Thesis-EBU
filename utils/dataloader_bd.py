@@ -364,6 +364,8 @@ class DatasetBD(torch.utils.data.Dataset):
             patch = cv2.imread('./utils/patch_img.jpg')  # Load your patch image
             # print(width, height)
             img = self._patchTrigger(img, patch,width, height, alpha=0.2)
+        elif triggerType == 'frequencyDomainPatch':
+            img = self._frequencyDomainPatchTrigger(img)
 
         else:
             raise NotImplementedError
