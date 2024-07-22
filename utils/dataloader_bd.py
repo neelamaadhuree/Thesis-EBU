@@ -375,16 +375,15 @@ class DatasetBD(torch.utils.data.Dataset):
     def _frequencyDomainPatchTrigger(self, img):
         img = np.expand_dims(img, axis=0)  # Add batch dimension
         img = poison_frequency_direct(img, arg)
-        img = img[0]  # Remove batch dimension
-        return img
+        return img[0]
 
   
     def _signalTrigger(self, img, width, height, distance, trig_w, trig_h):
         # strip
         alpha = 0.2#0.02 , diff pattern random noise
         # load signal mask
-        signal_mask = np.load('./trigger/checkerboard_pattern2.npy')
-        #signal_mask = np.load('./trigger/signal_cifar10_mask.npy')
+        #signal_mask = np.load('./trigger/checkerboard_pattern2.npy')
+        signal_mask = np.load('./trigger/signal_cifar10_mask.npy')
         blend_img = (1 - alpha) * img + alpha * signal_mask.reshape((width, height, 1))
         blend_img = np.clip(blend_img.astype('uint8'), 0, 255)
 

@@ -73,5 +73,6 @@ def poison_frequency_direct(x_train, args):
         x_train = YUV2RGB(x_train)
     x_train /= 255.
     x_train = np.clip(x_train, 0, 1)
+    x_train = (x_train * 255).astype(np.uint8) 
     return x_train
 
