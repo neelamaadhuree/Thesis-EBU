@@ -112,7 +112,7 @@ def main():
     criterion = nn.CrossEntropyLoss()
 
     # Write
-    save_folder_path = os.path.join('./saved/backdoored_model', 'poison_rate_'+str(arg.poison_rate), 'withTrans', arg.dataset, arg.model, '0.2blendchkr'+str(arg.trigger_type))
+    save_folder_path = os.path.join('./saved/backdoored_model', 'poison_rate_'+str(arg.poison_rate), 'withTrans', arg.dataset, arg.model, str(arg.trigger_type))
     if not os.path.exists(save_folder_path):
         os.makedirs(save_folder_path)
     arg.log = os.path.join(save_folder_path, 'withTrans.csv')

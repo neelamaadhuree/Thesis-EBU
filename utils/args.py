@@ -19,9 +19,9 @@ def get_args():
     parser.add_argument('--epochs', type=int, default=20)
     parser.add_argument('--batch_size', type=int, default=128)
     parser.add_argument("--num_workers", type=float, default=4)
-    parser.add_argument('--lr', type=float, default=0.02)
+    parser.add_argument('--lr', type=float, default=0.0001)
 
-    parser.add_argument('--poison_rate', type=float, default=0.1) # decides how many training samples are poisoned
+    parser.add_argument('--poison_rate', type=float, default=0.01) # decides how many training samples are poisoned
     parser.add_argument('--clean_rate', type=float, default=1.0) # decides how many clean training samples are provided in some defense methods
     parser.add_argument('--target_type', type=str, default='all2one', help='all2one, all2all, cleanLabel') 
     parser.add_argument('--target_label', type=int, default=0)

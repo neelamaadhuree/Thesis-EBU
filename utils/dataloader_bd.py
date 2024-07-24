@@ -107,7 +107,7 @@ def get_dataloader_train(opt):
     transform1, transform2, transform3 = get_transform(opt, train)
     train_data_bad = DatasetBD(opt, full_dataset=dataset, inject_portion=opt.poison_rate, transform=TransformThree(transform1, transform2, transform3),
                                mode='train')
-    show_samples(train_data_bad)
+    #show_samples(train_data_bad)
     dataloader = torch.utils.data.DataLoader(train_data_bad, batch_size=opt.batch_size, num_workers=opt.num_workers,
                                              shuffle=True)
     return dataloader

@@ -74,7 +74,7 @@ class RNR:
 
         arg = self.arg
         # Write
-        save_folder_path = os.path.join('./saved/backdoored_model', 'poison_rate_0', 'withTrans', arg.dataset, 
+        save_folder_path = os.path.join('./saved/backdoored_model', 'poison_rate_0', 'withTrans', 'freq'+arg.dataset, 
                                         arg.model, arg.trigger_type)
         if not os.path.exists(save_folder_path):
             os.makedirs(save_folder_path)
