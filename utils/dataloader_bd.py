@@ -413,7 +413,6 @@ class DatasetBD(torch.utils.data.Dataset):
         Returns:
         - Image with the patch applied.
         """
-        x = int(width * 0.25)
         x = int(width * 0.10)
         y = int(height * 0.65)
         patch_width = int(width * 0.25)
