@@ -19,7 +19,7 @@ def get_args():
     parser.add_argument('--epochs', type=int, default=20)
     parser.add_argument('--batch_size', type=int, default=128)
     parser.add_argument("--num_workers", type=float, default=4)
-    parser.add_argument('--lr', type=float, default=0.0001)
+    parser.add_argument('--lr', type=float, default=0.01)
 
     parser.add_argument('--poison_rate', type=float, default=0.01) # decides how many training samples are poisoned
     parser.add_argument('--clean_rate', type=float, default=1.0) # decides how many clean training samples are provided in some defense methods
@@ -36,7 +36,7 @@ def get_args():
     parser.add_argument('--poison_ratio', type=float, default=0.05, help='ratio of poisoned data') # \alpha_p
 
     parser.add_argument('--gamma', type=float, default=0.06, help='LR is multiplied by gamma on schedule.')
-    parser.add_argument('--schedule', type=int, nargs='+', default=[20, 50], help='Decrease learning rate at these epochs.')
+    parser.add_argument('--schedule', type=int, nargs='+', default=[20, 80], help='Decrease learning rate at these epochs.')
     parser.add_argument('-warm', type=int, default=1, help='warm up training phase')
 
     parser.add_argument('--trans1', type=str, default='rotate') # the first data augmentation

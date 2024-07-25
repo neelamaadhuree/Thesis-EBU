@@ -414,9 +414,10 @@ class DatasetBD(torch.utils.data.Dataset):
         - Image with the patch applied.
         """
         x = int(width * 0.25)
-        y = int(height * 0.25)
-        patch_width = int(width * 0.5)
-        patch_height = int(height * 0.5)
+        x = int(width * 0.10)
+        y = int(height * 0.65)
+        patch_width = int(width * 0.25)
+        patch_height = int(height * 0.25)
         # Resize the patch to the specified dimensions
         resized_patch = cv2.resize(patch, (patch_width, patch_height))
 
