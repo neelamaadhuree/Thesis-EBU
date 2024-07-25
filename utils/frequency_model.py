@@ -46,7 +46,7 @@ def IDCT(x_train, window_size):
 
 def poison_frequency_direct(x_train, args):
     # [0,1,2] means YUV channels, [1,2] means UV channels
-    freq_domain_channel_list =  [0, 1, 2]
+    freq_domain_channel_list =  [1, 2]
     pos_list= [(31, 31), (15, 15)]
     if x_train.shape[0] == 0:
         return x_train
