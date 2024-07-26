@@ -77,7 +77,7 @@ def get_args():
 
 
     parser.add_argument('--freq_domain_window_size', type=float, default=32, help='Window size for Freq domain')
-    parser.add_argument('--freq_domain_magnitude', type=float, default=20, help='Magnitude for frequency domain')
+    parser.add_argument('--freq_domain_magnitude', type=float, default=30, help='Magnitude for frequency domain')
     parser.add_argument('--freq_domain_yuv', type=bool, default=True)
 
 
