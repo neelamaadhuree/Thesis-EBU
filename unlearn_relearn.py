@@ -93,7 +93,7 @@ def ssd_tuning(model,
     device, 
     args):
     parameters = {
-        "lower_bound": 1,  # unused
+        "lower_bound": 0.2,  # 1
         "exponent": 1,  # unused
         "magnitude_diff": None,  # unused
         "min_layer": -1,  # -1: all layers are available for modification
@@ -212,7 +212,6 @@ def main():
         cfn_unlearning.unlearn(testloader_clean, testloader_bd, clean_data_loader)
     elif arg.unlearn_type=='ibau':
         csvFile = open(f_name, 'a', newline='')
-        
         writer = csv.writer(csvFile)
         writer.writerow([str(arg)])
         runTest(testloader_clean, testloader_bd, model, criterion, writer)
@@ -231,7 +230,7 @@ def main():
         model = get_network(arg,  norm_layer=models.NoisyBatchNorm2d)
         model = torch.nn.DataParallel(model)
         checkpoint = torch.load(arg.checkpoint_load)
-        anpMask = ANPMask(arg)
+        anpMask = ANPMask(arg)  
         anpMask.load_state_dict(model, orig_state_dict=checkpoint)
         anpMask.set_model(model)
         writer.writerow([str(arg)])

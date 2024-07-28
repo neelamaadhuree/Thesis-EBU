@@ -19,7 +19,7 @@ def get_args():
     parser.add_argument('--epochs', type=int, default=20)
     parser.add_argument('--batch_size', type=int, default=128)
     parser.add_argument("--num_workers", type=float, default=4)
-    parser.add_argument('--lr', type=float, default=0.01)
+    parser.add_argument('--lr', type=float, default=0.001)
 
     parser.add_argument('--poison_rate', type=float, default=0.01) # decides how many training samples are poisoned
     parser.add_argument('--clean_rate', type=float, default=1.0) # decides how many clean training samples are provided in some defense methods
@@ -58,11 +58,11 @@ def get_args():
     parser.add_argument('--nb-iter', type=int, default=2000, help='the number of iterations for training')
     parser.add_argument('--anp-eps', type=float, default=0.1) #  
     parser.add_argument('--anp-steps', type=int, default=100) # higher values 
-    parser.add_argument('--anp-alpha', type=float, default=0.8) # increase alpha 
+    parser.add_argument('--anp-alpha', type=float, default=0.3) # increase alpha to 0.5  
     parser.add_argument('--print-every', type=int, default=500, help='print results every few iterations')
     parser.add_argument('--pruning-by', type=str, default='number', choices=['number', 'threshold'])
-    parser.add_argument('--pruning-max', type=float, default=20, help='the maximum number/threshold for pruning') # dont touch #0.90
-    parser.add_argument('--pruning-step', type=float, default=3, help='the step size for evaluating the pruning') #increase #0.05
+    parser.add_argument('--pruning-max', type=float, default=15, help='the maximum number/threshold for pruning') # dont touch #0.90
+    parser.add_argument('--pruning-step', type=float, default=5, help='the step size for evaluating the pruning') #increase #0.05
 
     parser.add_argument('--nad-beta1', type=int, default=500, help='beta of low layer')
     parser.add_argument('--nad-beta2', type=int, default=1500, help='beta of middle layer')

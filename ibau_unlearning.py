@@ -11,7 +11,7 @@ from utils.utils import accuracy, normalization, AverageMeter, progress_bar
 
 
 class IBAUUnlearning:
-    def __init__(self, model, arg, epochs=5, lr=0.01, K =10):
+    def __init__(self, model, arg, epochs=5, lr=0.01, K =5):
         self.model = model
         self.epochs = epochs
         self.args = arg
@@ -45,7 +45,7 @@ class IBAUUnlearning:
 
 
         def loss_outer(perturb, model_params):
-            portion = 0.2
+            portion = 0.1
             images, labels = images_list[batchnum].to(args.device), labels_list[batchnum].long().to(args.device)
             patching = torch.zeros_like(images, device='cuda')
             number = images.shape[0]
@@ -64,7 +64,7 @@ class IBAUUnlearning:
 
         for round in range(self.epochs):
             batch_pert = torch.zeros((1, 3, 32, 32), requires_grad=True, device='cuda')
-            batch_opt = torch.optim.SGD(params=[batch_pert], lr=10)
+            batch_opt = torch.optim.SGD(params=[batch_pert], lr=30)
             
             for index, (images, labels, isCleans) in enumerate(unlearn_loader):
                 images= normalization(self.args,images)
