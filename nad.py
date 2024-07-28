@@ -58,10 +58,10 @@ class NAD:
                     'prec@5:{top5.val:.2f}({top5.avg:.2f})'.format(epoch, idx, len(train_loader), losses=at_losses, top1=top1, top5=top5))
 
     def adjust_learning_rate(self, optimizer, epoch, lr):
-        if epoch < 2:
+        if epoch < 5:
             lr = lr
         elif epoch < 20:
-            lr = 0.01
+            lr = 0.001
         elif epoch < 30:
             lr = 0.0001
         else:
@@ -72,6 +72,7 @@ class NAD:
 
 
     def train(self, train_loader):
+        #breakpoint()
         print('finished student model init...')
         self.teacher_model.eval()
 

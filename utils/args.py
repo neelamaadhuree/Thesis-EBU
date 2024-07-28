@@ -56,13 +56,13 @@ def get_args():
 
     parser.add_argument('--anp-output-dir', type=str, default='./saved/anp/')
     parser.add_argument('--nb-iter', type=int, default=2000, help='the number of iterations for training')
-    parser.add_argument('--anp-eps', type=float, default=0.4) #  
-    parser.add_argument('--anp-steps', type=int, default=1) # higher values 
-    parser.add_argument('--anp-alpha', type=float, default=0.1) # increase alpha 
+    parser.add_argument('--anp-eps', type=float, default=0.1) #  
+    parser.add_argument('--anp-steps', type=int, default=100) # higher values 
+    parser.add_argument('--anp-alpha', type=float, default=0.8) # increase alpha 
     parser.add_argument('--print-every', type=int, default=500, help='print results every few iterations')
     parser.add_argument('--pruning-by', type=str, default='number', choices=['number', 'threshold'])
     parser.add_argument('--pruning-max', type=float, default=20, help='the maximum number/threshold for pruning') # dont touch #0.90
-    parser.add_argument('--pruning-step', type=float, default=1, help='the step size for evaluating the pruning') #increase #0.05
+    parser.add_argument('--pruning-step', type=float, default=3, help='the step size for evaluating the pruning') #increase #0.05
 
     parser.add_argument('--nad-beta1', type=int, default=500, help='beta of low layer')
     parser.add_argument('--nad-beta2', type=int, default=1500, help='beta of middle layer')
@@ -71,9 +71,9 @@ def get_args():
 
 
     parser.add_argument('--nad-momentum', type=float, default=0.9, help='momentum')
-    parser.add_argument('--nad-weight_decay', type=float, default=1e-4, help='weight decay')
-    parser.add_argument('--nad-p', type=float, default=1.0, help='power for AT')
-    parser.add_argument('--student-epochs', type=int, default=30)
+    parser.add_argument('--nad-weight_decay', type=float, default=0.0001, help='weight decay')
+    parser.add_argument('--nad-p', type=float, default=1.30, help='power for AT')
+    parser.add_argument('--student-epochs', type=int, default=30) #-- change and see 
 
 
     parser.add_argument('--freq_domain_window_size', type=float, default=32, help='Window size for Freq domain')

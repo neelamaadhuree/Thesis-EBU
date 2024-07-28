@@ -75,7 +75,7 @@ def load_dataset(arg):
     return clean_samples, poison_samples
 
 def data_mix(clean_samples,poison_samples, poison_ratio):
-
+    
     noOfPoison=int(len(poison_samples)*poison_ratio)
     cleanDataReqLen = len(poison_samples) - noOfPoison
     print('noOfPoison - ',noOfPoison,'totalNoPoisonData - ',len(poison_samples), 'clean data included with poisons', cleanDataReqLen)
@@ -199,9 +199,11 @@ def main():
         #poison_data_loader = get_loader(poison_data)
         clean_data_loader, poison_data_loader,full_data_loader = get_mixed_data(poison_ratio, clean_data, poison_data)
         csvFile = open(f_name, 'a', newline='')
+       
         writer = csv.writer(csvFile)
+        writer.writerow([str(arg)])
         runTest(testloader_clean, testloader_bd, model, criterion, writer)
-        model=ssd_tuning(model,poison_data_loader,0.50,100,clean_data_loader, arg.device, arg)
+        model=ssd_tuning(model,poison_data_loader,0.5,300,clean_data_loader, arg.device, arg)
         runTest(testloader_clean, testloader_bd, model, criterion, writer)
         csvFile.close()
     elif arg.unlearn_type=='cfn':
@@ -210,7 +212,9 @@ def main():
         cfn_unlearning.unlearn(testloader_clean, testloader_bd, clean_data_loader)
     elif arg.unlearn_type=='ibau':
         csvFile = open(f_name, 'a', newline='')
+        
         writer = csv.writer(csvFile)
+        writer.writerow([str(arg)])
         runTest(testloader_clean, testloader_bd, model, criterion, writer)
         # clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data, poison_data)
         ibau_unlearning = IBAUUnlearning(model, arg)
@@ -221,6 +225,7 @@ def main():
     elif arg.unlearn_type == 'anp':
         csvFile = open(f_name, 'a', newline='')
         writer = csv.writer(csvFile)
+        
         clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data[:3000], poison_data)
         
         model = get_network(arg,  norm_layer=models.NoisyBatchNorm2d)
@@ -229,6 +234,7 @@ def main():
         anpMask = ANPMask(arg)
         anpMask.load_state_dict(model, orig_state_dict=checkpoint)
         anpMask.set_model(model)
+        writer.writerow([str(arg)])
         runTest(testloader_clean, testloader_bd, model, criterion, writer)
 
         print("Starting Masking...")
@@ -246,11 +252,13 @@ def main():
         runTest(testloader_clean, testloader_bd, model, criterion, writer)
     elif arg.unlearn_type == 'nad':
 
-        clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data[:500], poison_data)
+        clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data[:3000], poison_data)
 
         teacher_model = getResnetNadModel(arg)
         csvFile = open(f_name, 'a', newline='')
+        
         writer = csv.writer(csvFile)
+        writer.writerow([str(arg)])
         runTestNad(testloader_clean, testloader_bd, teacher_model, criterion, writer)
 
         tft = TeacherFineTuning(teacher_model, arg)
@@ -275,7 +283,9 @@ def main():
 
         model = getResnetNadModel(arg)
         csvFile = open(f_name, 'a', newline='')
+        
         writer = csv.writer(csvFile)
+        writer.writerow([str(arg)])
         #runTestNad(testloader_clean, testloader_bd, model, criterion, writer)
 
         neural_cleanse = NeuralCleanse(arg, model)
