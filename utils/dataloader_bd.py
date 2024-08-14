@@ -77,17 +77,29 @@ class Dataset_npy(torch.utils.data.Dataset):
 def show_samples(dataset, num_samples=5):
     indices = random.sample(range(len(dataset.poisoned_images)), num_samples)
     for idx in indices:
-        fig, ax = plt.subplots(1, 2, figsize=(8, 4))
-        ax[0].imshow(dataset.original_images[idx])
-        ax[0].set_title('Original Image')
-        ax[0].axis('off')
+        # Display original image
+        plt.figure(figsize=(4, 4))  # Set the figure size as needed
+        plt.imshow(dataset.original_images[idx])
+        #plt.title('Original Image')
+        plt.axis('off')  # Hide axes
+        plt.show()  # Show the first plot
 
-        ax[1].imshow(dataset.poisoned_images[idx])
-        ax[1].set_title('Poisoned Image')
-        ax[1].axis('off')
+        # Display poisoned image
+        plt.figure(figsize=(4, 4))  # Set the figure size as needed
+        plt.imshow(dataset.poisoned_images[idx])
+        #plt.title('Poisoned Image')
+        plt.axis('off')  # Hide axes
+        plt.show()  # Show the second plot
 
-        plt.show()
-
+def show_samples2(dataset, num_samples=5):
+    indices = random.sample(range(len(dataset[0])), num_samples)
+    for idx in indices:
+        # Display original image
+        plt.figure(figsize=(4, 4))  # Set the figure size as needed
+        plt.imshow(dataset[idx])
+        #plt.title('Original Image')
+        plt.axis('off')  # Hide axes
+        plt.show()  # Show the first plot
 # Assuming 'dataset' is an instance of DatasetBD
 
 def get_dataloader_train(opt):
@@ -103,11 +115,12 @@ def get_dataloader_train(opt):
     #     poison_rate=0
     # else:
     #     poison_rate=opt.poison_rate
-
+    #show_samples2(dataset[0])
     transform1, transform2, transform3 = get_transform(opt, train)
     train_data_bad = DatasetBD(opt, full_dataset=dataset, inject_portion=opt.poison_rate, transform=TransformThree(transform1, transform2, transform3),
                                mode='train')
-    #show_samples(train_data_bad)
+    breakpoint()
+    show_samples(train_data_bad)
     dataloader = torch.utils.data.DataLoader(train_data_bad, batch_size=opt.batch_size, num_workers=opt.num_workers,
                                              shuffle=True)
     return dataloader
@@ -174,6 +187,7 @@ class DatasetBD(torch.utils.data.Dataset):
         isClean = self.dataset[item][3]
         img = Image.fromarray(img)
         img = self.transform(img)
+        
         return img, label, gt_label, isClean
 
     def __len__(self):

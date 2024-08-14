@@ -10,22 +10,24 @@ def load_and_prepare_data(filepath):
 
 def plot_metrics_for_method(data, poison_rate):
     methods = data['Method'].unique()
-    data_poison = data[data['Poison Rate'] == poison_rate]
+    data_poison = data[data['Poison Ratio'] == poison_rate]
     
     for method in methods:
         method_data = data_poison[data_poison['Method'] == method]
-        plt.figure(figsize=(12, 6))
-        sns.lineplot(x='Number of Samples', y='Test Acc', data=method_data, marker='o', label='Test Acc')
-        sns.lineplot(x='Number of Samples', y='ASR', data=method_data, marker='o', label='ASR')
-        plt.title(f'Test Accuracy and ASR for "{method}" Method at Poison Rate {poison_rate}')
-        plt.xlabel('Number of Samples')
-        plt.ylabel('Percentage')
+        plt.figure(figsize=(8, 4))
+        sns.lineplot(x='Identification Rate', y='Test Acc', data=method_data, marker='o', label='Test Acc')
+        sns.lineplot(x='Identification Rate', y='ASR', data=method_data, marker='o', label='ASR')
+        plt.title(f'Test Accuracy and ASR for "{method}" Method at Poison Ratio {poison_rate}',fontsize=25)
+        plt.xlabel('Identification Rate(%)',fontsize=20)
+        plt.ylabel('Percentage',fontsize=20)
+        plt.xticks(fontsize=15)
+        plt.yticks(fontsize=15)
         plt.legend()
         plt.grid(True)
+        plt.ylim(0, 105)
         plt.show()
-
 # Path to the dataset
-filepath = './data/blendsignal.csv'
+filepath = './Visualization/data/freqtriggerBD.csv'
 
 # Load and prepare data
 data = load_and_prepare_data(filepath)

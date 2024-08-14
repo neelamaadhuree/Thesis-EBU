@@ -91,7 +91,7 @@ class ContinuousForgetting:
             test_loss_cl, test_acc_cl, _ = test_epoch(self.args, testloader_clean, model, self.criterion, 0, 'clean')
             test_loss_bd, test_acc_bd, test_acc_robust = test_epoch(self.args, testloader_bd, model, self.criterion, 0, 'bd')
             writer.writerow([0, test_acc_cl.item(), test_acc_bd.item()])
-            optimizer = torch.optim.SGD(self.trainable_params_(model), lr=self.args.lr, momentum=0.9, weight_decay=1e-4)
+            optimizer = torch.optim.SGD(self.trainable_params_(model), lr=self.args.lr, momentum=0.70, weight_decay=1e-4)
             scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=self.args.schedule, gamma=self.args.gamma)
             for epoch in range(self.args.epochs):
                 self.train_cf(model, epoch, optimizer, scheduler, isolate_clean_data_loader)

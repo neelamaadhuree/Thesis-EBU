@@ -191,7 +191,7 @@ def main():
         rnr_learning.unlearn(clean_data_loader, testloader_clean, testloader_bd)
     elif arg.unlearn_type=='cfu':
         cf = ContinuousForgetting(arg, criterion)
-        clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data[:3000], poison_data)
+        clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data[:100], poison_data)
         cf.relearn(30, model, clean_data_loader, testloader_clean, testloader_bd)
     elif arg.unlearn_type=='ssd':        
 
@@ -203,11 +203,11 @@ def main():
         writer = csv.writer(csvFile)
         writer.writerow([str(arg)])
         runTest(testloader_clean, testloader_bd, model, criterion, writer)
-        model=ssd_tuning(model,poison_data_loader,0.5,300,clean_data_loader, arg.device, arg)
+        model=ssd_tuning(model,poison_data_loader,0.5,60,clean_data_loader, arg.device, arg)
         runTest(testloader_clean, testloader_bd, model, criterion, writer)
         csvFile.close()
     elif arg.unlearn_type=='cfn':
-        clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data[:100], poison_data)
+        clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data[:3000], poison_data)
         cfn_unlearning = CFNUnlearning(model, criterion, arg)
         cfn_unlearning.unlearn(testloader_clean, testloader_bd, clean_data_loader)
     elif arg.unlearn_type=='ibau':
@@ -217,7 +217,7 @@ def main():
         runTest(testloader_clean, testloader_bd, model, criterion, writer)
         # clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data, poison_data)
         ibau_unlearning = IBAUUnlearning(model, arg)
-        clean_data_loader = get_loader(clean_data[:3000])
+        clean_data_loader = get_loader(clean_data[:100])
         ibau_unlearning.unlearn(clean_data_loader) 
         runTest(testloader_clean, testloader_bd, model, criterion, writer)
         csvFile.close()
@@ -251,12 +251,12 @@ def main():
         runTest(testloader_clean, testloader_bd, model, criterion, writer)
     elif arg.unlearn_type == 'nad':
 
-        clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data[:3000], poison_data)
+        clean_data_loader, poison_data_loader,_ = get_mixed_data(poison_ratio, clean_data[:250], poison_data)
 
         teacher_model = getResnetNadModel(arg)
         csvFile = open(f_name, 'a', newline='')
         
-        writer = csv.writer(csvFile)
+        writer = csv.writer(csvFile)    
         writer.writerow([str(arg)])
         runTestNad(testloader_clean, testloader_bd, teacher_model, criterion, writer)
 

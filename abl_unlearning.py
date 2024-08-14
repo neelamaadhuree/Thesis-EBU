@@ -153,7 +153,7 @@ class ABLUnlearning:
         print(f'Epoch: {epoch}, Clean Test Accuracy: {clean_acc:.2f}, Attack Success Rate: {asr:.2f}')
 
         # Save training progress
-        log_root = self.args.log_root + '/ABL_unlearning_patch01fix.csv'
+        log_root = self.args.log_root + '/ABL_unlearning_signalrev1724-10.csv'
         test_process.append(
             (epoch, clean_acc, asr)
         )
