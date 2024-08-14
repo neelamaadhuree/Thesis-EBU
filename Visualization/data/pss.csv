@@ -1,0 +1,5 @@
+Test Accuracy,ASR,Epochs,Identification Rate
+91.5,99.98,20,20
+91.6,93.53,100,20
+91.3,99.9,20,80
+91.5,29.37,100,80

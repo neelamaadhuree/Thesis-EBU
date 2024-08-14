@@ -1,1 +1,4 @@
 *.pyc
+/saved*
+/dataset*
+utils/testforpoison.py

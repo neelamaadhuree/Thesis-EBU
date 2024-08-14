@@ -38,7 +38,8 @@ class AverageMeter(object):
         self.avg = self.sum / self.count
 
 
-_, term_width = os.popen('stty size', 'r').read().split()
+#_, term_width = os.popen('stty size', 'r').read().split()
+term_width = 80
 term_width = int(term_width)
 TOTAL_BAR_LENGTH = 65.
 last_time = time.time()
@@ -121,18 +122,16 @@ def format_time(seconds):
 
 
 def normalization(opt, inputs):
+    # # Ensure inputs is a tensor
+    # if not isinstance(inputs, torch.Tensor):
+    #     inputs = torch.tensor(inputs, dtype=torch.float32)  # Assuming inputs can be converted directly
+    
     output = inputs.clone()
     if opt.dataset == "cifar10":
         f = transforms.Normalize([0.4914, 0.4822, 0.4465], [0.2023, 0.1994, 0.2010])
-    elif opt.dataset == "mnist":
-        f = transforms.Normalize([0.5], [0.5])
-    elif opt.dataset == 'tiny':
-        f = transforms.Normalize([0.4802, 0.4481, 0.3975], [0.2302, 0.2265, 0.2262])
     elif opt.dataset == "gtsrb" or opt.dataset == "celeba":
         # pass
         return output
-    elif opt.dataset == 'imagenet':
-        f = transforms.Normalize([0.4802, 0.4481, 0.3975], [0.2302, 0.2265, 0.2262])
     elif opt.dataset == "cifar100":
         f = transforms.Normalize([0.5070751592371323, 0.48654887331495095, 0.4409178433670343], [0.2673342858792401, 0.2564384629170883, 0.27615047132568404])
     else:
@@ -146,11 +145,11 @@ def save_checkpoint_only(path, model):
     state = {'model': model.state_dict()}
     torch.save(state, path)
 
-def save_checkpoint(state, epoch, is_best, opt):
-    if is_best:
-        filepath = os.path.join(opt.unlearning_root, opt.model + r'-unlearning_epochs{}.tar'.format(epoch))
-        torch.save(state, filepath)
-    print('[info] Finish saving the model')
+# def save_checkpoint(state, epoch, is_best, opt):
+#     if is_best:
+#         filepath = os.path.join(opt.unlearning_root, opt.model + r'-unlearning_epochs{}.tar'.format(epoch))
+#         torch.save(state, filepath)
+#     print('[info] Finish saving the model')
 
 def accuracy(output, target, topk=(1,)):
     """Computes the precision@k for the specified values of k"""

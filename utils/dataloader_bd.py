@@ -7,6 +7,7 @@ import numpy as np
 from PIL import Image
 from tqdm import tqdm
 import time
+import pdb
 import sys
 from matplotlib import image as mlt
 import cv2
@@ -17,6 +18,9 @@ import torch.nn.functional as F
 import torchvision
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
+import matplotlib.pyplot as plt
+import random
+from .frequency_model import poison_frequency_direct
 
 from utils import args
 # from utils.SSBA.encode_image import bd_generator # if you run SSBA attack, please use this line
@@ -70,21 +74,53 @@ class Dataset_npy(torch.utils.data.Dataset):
         return self.dataLen
 
 
+def show_samples(dataset, num_samples=5):
+    indices = random.sample(range(len(dataset.poisoned_images)), num_samples)
+    for idx in indices:
+        # Display original image
+        plt.figure(figsize=(4, 4))  # Set the figure size as needed
+        plt.imshow(dataset.original_images[idx])
+        #plt.title('Original Image')
+        plt.axis('off')  # Hide axes
+        plt.show()  # Show the first plot
+
+        # Display poisoned image
+        plt.figure(figsize=(4, 4))  # Set the figure size as needed
+        plt.imshow(dataset.poisoned_images[idx])
+        #plt.title('Poisoned Image')
+        plt.axis('off')  # Hide axes
+        plt.show()  # Show the second plot
+
+def show_samples2(dataset, num_samples=5):
+    indices = random.sample(range(len(dataset[0])), num_samples)
+    for idx in indices:
+        # Display original image
+        plt.figure(figsize=(4, 4))  # Set the figure size as needed
+        plt.imshow(dataset[idx])
+        #plt.title('Original Image')
+        plt.axis('off')  # Hide axes
+        plt.show()  # Show the first plot
+# Assuming 'dataset' is an instance of DatasetBD
+
 def get_dataloader_train(opt):
     train = True
-    if opt.dataset == "gtsrb":
-        dataset = GTSRB(opt, train)
-    elif opt.dataset == "cifar10":
+    if opt.dataset == "cifar10":
         dataset = torchvision.datasets.CIFAR10(opt.data_root, train, download=True)
     elif opt.dataset == "cifar100":
         dataset = torchvision.datasets.CIFAR100(opt.data_root, train, download=True)
     else:
         raise Exception("Invalid dataset")
-
+    
+    # if opt.unlearn_type=='rnr':
+    #     poison_rate=0
+    # else:
+    #     poison_rate=opt.poison_rate
+    #show_samples2(dataset[0])
     transform1, transform2, transform3 = get_transform(opt, train)
     train_data_bad = DatasetBD(opt, full_dataset=dataset, inject_portion=opt.poison_rate, transform=TransformThree(transform1, transform2, transform3),
                                mode='train')
-
+    breakpoint()
+    show_samples(train_data_bad)
     dataloader = torch.utils.data.DataLoader(train_data_bad, batch_size=opt.batch_size, num_workers=opt.num_workers,
                                              shuffle=True)
     return dataloader
@@ -92,20 +128,19 @@ def get_dataloader_train(opt):
 
 def get_dataloader_test(opt):
     train = False
-    if opt.dataset == "gtsrb":
-        dataset = GTSRB(opt, train)
-    elif opt.dataset == "cifar10":
+    if opt.dataset == "cifar10":
         dataset = torchvision.datasets.CIFAR10(opt.data_root, train, download=True)
     elif opt.dataset == "cifar100":
         dataset = torchvision.datasets.CIFAR100(opt.data_root, train, download=True)
     else:
         raise Exception("Invalid dataset")
 
-    if opt.unlearn_type=='dbr':
+    #if opt.unlearn_type=='dbr' or opt.unlearn_type=='rnr' or opt.unlearn_type=='cfu' or opt.unlearn_type=='ssd':
+    if opt.unlearn_type != 'abl': 
         transform = get_transform(opt, train)
     if opt.unlearn_type=='abl':
-        transform = transforms.Compose([transforms.ToTensor()
-                                  ])
+        transform = transforms.Compose([transforms.ToTensor()])
+    
     test_data_clean = DatasetBD(opt, full_dataset=dataset, inject_portion=0, transform=transform, mode='test')
     test_data_bad = DatasetBD(opt, full_dataset=dataset, inject_portion=1, transform=transform, mode='test')
 
@@ -135,6 +170,9 @@ def get_dataloader_test(opt):
 class DatasetBD(torch.utils.data.Dataset):
     def __init__(self, opt, full_dataset, inject_portion, transform=None, mode="train", distance=1):
         self.triggerGenerator = None # SSBA
+        
+        self.original_images = []  # To store original images
+        self.poisoned_images = []  # To store poisoned images
         self.addTriggerGenerator(opt.trigger_type, opt.dataset) # SSBA
         self.dataset = self.addTrigger(full_dataset, opt.target_label, inject_portion, mode, distance,
                                        int(0.1 * opt.input_width), int(0.1 * opt.input_height), opt.trigger_type,
@@ -149,6 +187,7 @@ class DatasetBD(torch.utils.data.Dataset):
         isClean = self.dataset[item][3]
         img = Image.fromarray(img)
         img = self.transform(img)
+        
         return img, label, gt_label, isClean
 
     def __len__(self):
@@ -167,7 +206,7 @@ class DatasetBD(torch.utils.data.Dataset):
         if mode == 'train':
             if target_type == 'all2one':
                 non_target_idx = []
-                for i in range(len(dataset)):
+                for i in range(len(dataset)):                    
                     if dataset[i][1] != target_label:
                         non_target_idx.append(i)
                 non_target_idx = np.array(non_target_idx)
@@ -192,7 +231,7 @@ class DatasetBD(torch.utils.data.Dataset):
         cnt = 0
         for i in tqdm(range(len(dataset))):
             data = dataset[i]
-
+            original_img = np.array(data[0])  # Store original image
             if target_type == 'all2one':
 
                 if mode == 'train':
@@ -202,7 +241,8 @@ class DatasetBD(torch.utils.data.Dataset):
                     if i in perm:
                         # select trigger
                         img = self.selectTrigger(mode, img, data[1], width, height, distance, trig_w, trig_h, trigger_type)
-
+                        self.poisoned_images.append(img)
+                        self.original_images.append(original_img)
                         # change target
                         # dataset_.append((img, target_label))
                         dataset_.append((img, target_label, data[1], False))
@@ -220,7 +260,8 @@ class DatasetBD(torch.utils.data.Dataset):
                     height = img.shape[1]
                     if i in perm:
                         img = self.selectTrigger(mode, img, data[1], width, height, distance, trig_w, trig_h, trigger_type)
-
+                        self.poisoned_images.append(img)
+                        self.original_images.append(original_img)
                         # dataset_.append((img, target_label))
                         dataset_.append((img, target_label, data[1], False))
                         cnt += 1
@@ -238,7 +279,8 @@ class DatasetBD(torch.utils.data.Dataset):
                     if i in perm:
                         img = self.selectTrigger(mode, img, data[1], width, height, distance, trig_w, trig_h, trigger_type)
                         target_ = self._change_label_next(data[1])
-
+                        self.poisoned_images.append(img)
+                        self.original_images.append(original_img)
                         # dataset_.append((img, target_))
                         dataset_.append((img, target_, data[1], False))
                         cnt += 1
@@ -256,6 +298,9 @@ class DatasetBD(torch.utils.data.Dataset):
 
                         target_ = self._change_label_next(data[1])
                         # dataset_.append((img, target_))
+                        self.poisoned_images.append(img)
+                        self.original_images.append(original_img)
+                        
                         dataset_.append((img, target_, data[1], False))
                         cnt += 1
                     else:
@@ -316,7 +361,7 @@ class DatasetBD(torch.utils.data.Dataset):
 
     def selectTrigger(self, mode, img, label, width, height, distance, trig_w, trig_h, triggerType):
 
-        assert triggerType in [ 'signalTrigger', 'kittyTrigger','patchTrigger']
+        assert triggerType in [ 'signalTrigger', 'kittyTrigger','patchTrigger', "frequencyDomainPatch"]
 
         if triggerType == 'signalTrigger':
             img = self._signalTrigger(img, width, height, distance, trig_w, trig_h)
@@ -330,20 +375,28 @@ class DatasetBD(torch.utils.data.Dataset):
                 - patch: Trigger image to apply (numpy array).
                 - alpha: Opacity of the patch.
             """
-            patch = cv2.imread('F://Python Projects//Thesis//poison_dataset//utils//patch_img.jpg')  # Load your patch image
+            patch = cv2.imread('./utils/patch_img.jpg')  # Load your patch image
             # print(width, height)
-            img = self._patchTrigger(img, patch,width, height, alpha=0.2)
+            img = self._patchTrigger(img, patch,width, height, alpha=0.8)
+        elif triggerType == 'frequencyDomainPatch':
+            img = self._frequencyDomainPatchTrigger(img)
 
         else:
             raise NotImplementedError
 
         return img
 
+    def _frequencyDomainPatchTrigger(self, img):
+        img = np.expand_dims(img, axis=0)  # Add batch dimension
+        img = poison_frequency_direct(img, arg)
+        return img[0]
+
   
     def _signalTrigger(self, img, width, height, distance, trig_w, trig_h):
         # strip
-        alpha = 0.2
+        alpha = 0.2#0.02 , diff pattern random noise
         # load signal mask
+        #signal_mask = np.load('./trigger/checkerboard_pattern2.npy')
         signal_mask = np.load('./trigger/signal_cifar10_mask.npy')
         blend_img = (1 - alpha) * img + alpha * signal_mask.reshape((width, height, 1))
         blend_img = np.clip(blend_img.astype('uint8'), 0, 255)
@@ -374,10 +427,10 @@ class DatasetBD(torch.utils.data.Dataset):
         Returns:
         - Image with the patch applied.
         """
-        x = int(width * 0.25)
-        y = int(height * 0.25)
-        patch_width = int(width * 0.5)
-        patch_height = int(height * 0.5)
+        x = int(width * 0.10)
+        y = int(height * 0.65)
+        patch_width = int(width * 0.25)
+        patch_height = int(height * 0.25)
         # Resize the patch to the specified dimensions
         resized_patch = cv2.resize(patch, (patch_width, patch_height))
 
@@ -398,7 +451,7 @@ class DatasetBD(torch.utils.data.Dataset):
 
         patch_img = np.clip(img.astype('uint8'), 0, 255)
         return patch_img
-
+    
 
 def get_transform(opt, train=True):
     ### transform1 ###
@@ -415,7 +468,7 @@ def get_transform(opt, train=True):
     transforms_list.append(transforms.Resize((opt.input_height, opt.input_width)))
     if train:
         if opt.dataset == 'cifar10' or opt.dataset == 'gtsrb':
-            transforms_list.append(transforms.RandomCrop((opt.input_height, opt.input_width), padding=4))
+            transforms_list.append(transforms.RandomCrop((opt.input_height, opt.input_width), padding=4))  ## maybe try to avoid this 
             transforms_list.append(transforms.RandomHorizontalFlip())
         elif opt.dataset == 'cifar100':
             transforms_list.append(transforms.RandomCrop((opt.input_height, opt.input_width), padding=4))
@@ -466,60 +519,5 @@ def get_transform(opt, train=True):
     transforms3 = transforms.Compose(transforms_list)
 
     return transforms1, transforms2, transforms3
-
-
-
-class GTSRB(data.Dataset):
-    def __init__(self, opt, train):
-        super(GTSRB, self).__init__()
-        if train:
-            self.data_folder = os.path.join(opt.data_root, "Train")
-            self.images, self.labels = self._get_data_train_list()
-            if not os.path.isdir(self.data_folder):
-                os.makedirs(self.data_folder)
-        else:
-            self.data_folder = os.path.join(opt.data_root, "Test")
-            self.images, self.labels = self._get_data_test_list()
-            if not os.path.isdir(self.data_folder):
-                os.makedirs(self.data_folder)
-
-        # self.transforms = transforms
-
-    def _get_data_train_list(self):
-        images = []
-        labels = []
-        for c in range(0, 43):
-            prefix = self.data_folder + "/" + format(c, "05d") + "/"
-            if not os.path.isdir(prefix):
-                os.makedirs(prefix)
-            gtFile = open(prefix + "GT-" + format(c, "05d") + ".csv")
-            gtReader = csv.reader(gtFile, delimiter=";")
-            next(gtReader)
-            for row in gtReader:
-                images.append(prefix + row[0])
-                labels.append(int(row[7]))
-            gtFile.close()
-        return images, labels
-
-    def _get_data_test_list(self):
-        images = []
-        labels = []
-        prefix = os.path.join(self.data_folder, "GT-final_test.csv")
-        gtFile = open(prefix)
-        gtReader = csv.reader(gtFile, delimiter=";")
-        next(gtReader)
-        for row in gtReader:
-            images.append(self.data_folder + "/" + row[0])
-            labels.append(int(row[7]))
-        return images, labels
-
-    def __len__(self):
-        return len(self.images)
-
-    def __getitem__(self, index):
-        image = Image.open(self.images[index])
-        # image = self.transforms(image)
-        label = self.labels[index]
-        return image, label
 
 

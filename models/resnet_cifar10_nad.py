@@ -250,19 +250,23 @@ class ResNet(nn.Module):
         x = self.maxpool(x)
 
         x = self.layer1(x)
+        activation1 = x
         x = self.layer2(x)
+        activation2 = x
         x = self.layer3(x)
+        activation3 = x
         x = self.layer4(x)
+        activation4 = x
 
         x = self.avgpool(x)
         x = x.reshape(x.size(0), -1)
         x = self.fc(x)
 
-        return x
+        return activation1, activation2, activation3, activation4, x
 
 
-def _resnet(arch, block, layers, pretrained, progress, norm_layer, device, **kwargs):
-    model = ResNet(block, layers, norm_layer=norm_layer, **kwargs)
+def _resnet(arch, block, layers, pretrained, progress, device, **kwargs):
+    model = ResNet(block, layers, **kwargs)
     if pretrained:
         script_dir = os.path.dirname(__file__)
         state_dict = torch.load(
@@ -272,34 +276,13 @@ def _resnet(arch, block, layers, pretrained, progress, norm_layer, device, **kwa
     return model
 
 
-def resnet18(pretrained=False, progress=True, device="cpu", norm_layer = None, **kwargs):
+def resnet18_nad(pretrained=False, progress=True, device="cpu", **kwargs):
     """Constructs a ResNet-18 model.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
     return _resnet(
-        "resnet18", BasicBlock, [2, 2, 2, 2], pretrained, progress, norm_layer, device, **kwargs
+        "resnet18", BasicBlock, [2, 2, 2, 2], pretrained, progress, device, **kwargs
     )
 
-
-def resnet34(pretrained=False, progress=True, device="cpu", norm_layer = None, **kwargs):
-    """Constructs a ResNet-34 model.
-    Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
-        progress (bool): If True, displays a progress bar of the download to stderr
-    """
-    return _resnet(
-        "resnet34", BasicBlock, [3, 4, 6, 3], pretrained, progress, norm_layer, device, **kwargs
-    )
-
-
-def resnet50(pretrained=False, progress=True, device="cpu", norm_layer = None, **kwargs):
-    """Constructs a ResNet-50 model.
-    Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
-        progress (bool): If True, displays a progress bar of the download to stderr
-    """
-    return _resnet(
-        "resnet50", Bottleneck, [3, 4, 6, 3], pretrained, progress, norm_layer, device, **kwargs
-    )

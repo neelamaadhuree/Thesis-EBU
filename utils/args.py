@@ -16,10 +16,10 @@ def get_args():
     parser.add_argument("--input_width", type=int, default=None)
     parser.add_argument("--input_channel", type=int, default=None)
 
-    parser.add_argument('--epochs', type=int, default=200)
+    parser.add_argument('--epochs', type=int, default=20)
     parser.add_argument('--batch_size', type=int, default=128)
     parser.add_argument("--num_workers", type=float, default=4)
-    parser.add_argument('--lr', type=float, default=0.01)
+    parser.add_argument('--lr', type=float, default=0.1)
 
     parser.add_argument('--poison_rate', type=float, default=0.1) # decides how many training samples are poisoned
     parser.add_argument('--clean_rate', type=float, default=1.0) # decides how many clean training samples are provided in some defense methods
@@ -32,17 +32,16 @@ def get_args():
 
     parser.add_argument('--gamma_low', type=float, default=None, help='<=gamma_low is clean') # \gamma_c
     parser.add_argument('--gamma_high', type=float, default=None, help='>=gamma_high is poisoned') # \gamma_p
-    parser.add_argument('--clean_ratio', type=float, default=0.80, help='ratio of clean data') # \alpha_c
-    parser.add_argument('--poison_ratio', type=float, default=0.20, help='ratio of poisoned data') # \alpha_p
+    parser.add_argument('--clean_ratio', type=float, default=0.20, help='ratio of clean data') # \alpha_c
+    parser.add_argument('--poison_ratio', type=float, default=0.05, help='ratio of poisoned data') # \alpha_p
 
-    parser.add_argument('--gamma', type=float, default=0.1, help='LR is multiplied by gamma on schedule.')
-    parser.add_argument('--schedule', type=int, nargs='+', default=[100, 150], help='Decrease learning rate at these epochs.')
+    parser.add_argument('--gamma', type=float, default=0.06, help='LR is multiplied by gamma on schedule.')
+    parser.add_argument('--schedule', type=int, nargs='+', default=[20, 80], help='Decrease learning rate at these epochs.')
     parser.add_argument('-warm', type=int, default=1, help='warm up training phase')
 
     parser.add_argument('--trans1', type=str, default='rotate') # the first data augmentation
     parser.add_argument('--trans2', type=str, default='affine') # the second data augmentation
 
-    #ABL specific
     parser.add_argument('--unlearn_type', type=str, default=None, help='dbr, abl') # unlearn method
     parser.add_argument('--unlearning_epochs', type=int, default=20, help='number of unlearning epochs to run')
     parser.add_argument('--interval', type=int, default=5, help='frequency of save model')
@@ -53,8 +52,39 @@ def get_args():
     parser.add_argument('--print_freq', type=int, default=200, help='frequency of showing training results on console')
     parser.add_argument('--finetuning_ascent_model', type=str, default=True, help='whether finetuning model')
     parser.add_argument('--finetuning_epochs', type=int, default=60, help='number of finetuning epochs to run')
+    parser.add_argument('--clip', type=float, default=10.0, metavar='M', help='Gradient clipping (default: 10)')
+
+    parser.add_argument('--anp-output-dir', type=str, default='./saved/anp/')
+    parser.add_argument('--nb-iter', type=int, default=2000, help='the number of iterations for training')
+    parser.add_argument('--anp-eps', type=float, default=0.08) #  
+    parser.add_argument('--anp-steps', type=int, default=100) # higher values 
+    parser.add_argument('--anp-alpha', type=float, default=0.5) # increase alpha to 0.5  
+    parser.add_argument('--print-every', type=int, default=500, help='print results every few iterations')
+    parser.add_argument('--pruning-by', type=str, default='number', choices=['number', 'threshold'])
+    parser.add_argument('--pruning-max', type=float, default=15, help='the maximum number/threshold for pruning') # dont touch #0.90
+    parser.add_argument('--pruning-step', type=float, default=5, help='the step size for evaluating the pruning') #increase #0.05
+
+    parser.add_argument('--nad-beta1', type=int, default=500, help='beta of low layer')
+    parser.add_argument('--nad-beta2', type=int, default=1500, help='beta of middle layer')
+    parser.add_argument('--nad-beta3', type=int, default=1500, help='beta of high layer')   
+    parser.add_argument('--nad-beta4', type=int, default=1000, help='beta of high layer')
+
+
+    parser.add_argument('--nad-momentum', type=float, default=0.9, help='momentum')
+    parser.add_argument('--nad-weight_decay', type=float, default=0.0001, help='weight decay')
+    parser.add_argument('--nad-p', type=float, default=1.30, help='power for AT')
+    parser.add_argument('--student-epochs', type=int, default=30) #-- change and see 
+
+
+    parser.add_argument('--freq_domain_window_size', type=float, default=32, help='Window size for Freq domain')
+    parser.add_argument('--freq_domain_magnitude', type=float, default=30, help='Magnitude for frequency domain')
+    parser.add_argument('--freq_domain_yuv', type=bool, default=True)
+
+
 
     arg = parser.parse_args()
+    # CF 
+    
 
     # Set image class and size
     if arg.dataset == "cifar10":
