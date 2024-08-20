@@ -4,7 +4,11 @@ from torch import nn
 from test_model import test_epoch
 import csv
 from utils.utils import accuracy, normalization, AverageMeter
-
+'''
+Based on the paper 'Towards Adversarial Evaluations for Inexact Machine Unlearning' this code was created.
+Source: https://github.com/shash42/Evaluating-Inexact-Unlearning
+Original Author: Shashwat Goel, Ameya Prabhu, Sernam Lim, Phillip Torr, Amartya Sanyal, Ponnurangam Kumaraguru
+'''
 
 class ContinuousForgetting:
 

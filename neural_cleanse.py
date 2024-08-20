@@ -7,6 +7,13 @@ import os
 from utils.utils import save_checkpoint, progress_bar, normalization
 from test_model import test_epoch
 
+
+'''
+Based on the paper 'Neural Cleanse: Identifying and Mitigating Backdoor Attacks in Neural Networks' this code was created.
+Source: https://github.com/bolunwang/backdoor
+Original Author:  Bolun Wang
+'''
+
 class NeuralCleanse:
 
     def __init__(self, args, model):

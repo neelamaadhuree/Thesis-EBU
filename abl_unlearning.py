@@ -2,6 +2,12 @@
 from utils.utils import accuracy,save_checkpoint, progress_bar, normalization, AverageMeter
 import torch
 import pandas as pd
+'''
+Based on the paper 'Anti-Backdoor Learning: Training Clean Models on Poisoned Data' this code was created.
+Source: https://github.com/bboylyg/ABL
+Original Author: Xingjun Ma
+'''
+
 
 class ABLUnlearning:
 
