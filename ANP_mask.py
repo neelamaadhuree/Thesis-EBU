@@ -7,8 +7,11 @@ import torch
 import models
 from utils.utils import progress_bar, normalization
 
-
-
+'''
+Based on the paper 'Adversarial Neuron Pruning Purifies Backdoored Deep Models' this code was created.
+Source: https://github.com/csdongxian/ANP_backdoor
+Original Author: Dongxian Wu,  Yisen Wang
+'''
 class ANPMask:
 
     def __init__(self, args):

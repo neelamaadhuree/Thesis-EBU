@@ -10,6 +10,13 @@ import hypergrad as hg
 from utils.utils import accuracy, normalization, AverageMeter, progress_bar
 
 
+'''
+Based on the paper 'Adversarial Unlearning of Backdoors via Implicit Hypergradient' this code was created.
+Source: https://github.com/YiZeng623/I-BAU/tree/main
+Original Author: Yi Zeng, Si Chen, Won Park, Z. Morley Mao, Ming Jin, Ruoxi Jia
+'''
+
+
 class IBAUUnlearning:
     def __init__(self, model, arg, epochs=5, lr=0.01, K = 50):
         self.model = model

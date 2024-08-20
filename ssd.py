@@ -24,6 +24,11 @@ from utils.utils import accuracy, normalization, AverageMeter
 ###############################################
 # Clean implementation
 ###############################################
+'''
+Based on the paper 'Fast Machine Unlearning Without Retraining Through Selective Synaptic Dampening' this code was created.
+Source: https://github.com/if-loops/selective-synaptic-dampening
+Original Author:  Stefan Schoepf
+'''
 
 
 class ParameterPerturber:

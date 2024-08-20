@@ -5,6 +5,11 @@ import csv
 from test_model import test_epoch
 from utils.utils import save_checkpoint_only, progress_bar, normalization
 
+'''
+Based on the paper 'Effective Backdoor Defense by Exploiting Sensitivity of Poisoned Samples' this code was created.
+Source: https://github.com/SCLBD/Effective_backdoor_defense
+Original Author: Weixin Chen, Baoyuan Wu, Haoqian Wang
+'''
 
 class DBRUnlearning:
 
